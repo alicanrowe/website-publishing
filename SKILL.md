@@ -15,6 +15,9 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 3. Changing an existing page: read the whole note first. Hand-built pages carry their own `<style>` block; find the rule you need and change it there.
 4. Screenshot the page as it is now (`--prefix before-`), so you have something to compare against.
 
+## Standing rule: on theme and up to date (alican)
+The whole site stays on the brand theme, and every project page matches the latest version of that project: renders, 3D previews, specs, drawings and animations. When a project gets a new version anywhere (CAD, renders, a GLB in the project's files), the site's page, its home and category cards, and its 3D tile move to it in the same session. Before any site PR, run `theme_audit.mjs` on the whole site (no FAILs) and `scripts/version_check.py`, which lists pages that show an older version than the project's files hold.
+
 ## Making the change
 - New project page: follow `references/adding-a-page.md` and start from `templates/project-page.md`.
 - A piece with a model: render, 3D viewer and dimension drawing sit inline, side by side, with the spec table under them (`references/inline-layout.md`). Never put the viewer and its drawing in separate sections.
@@ -23,7 +26,8 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 - Show each project once per page: nothing in a grid that is already in the hero or a band above it.
 - Project cards everywhere are the home page card: a 4:5 window on the cyc, the name in caps on the left and one fact in mono on the right (`.ar-cards` / `.ar-card`, or `%% portfolio %%`; see `references/inline-layout.md`). A project with a 3D model gets the model in its card, as on the home page.
 - One header on every page, laid out as on the home page: work nav on the left, logo in the centre, studio nav on the right, a burger on phones. Nav buttons never move between pages. Every category in the nav links to its own page (`/sculpture`, `/robotics`), never to the home page or an anchor on it.
-- Sculpture vs furniture: alican's carved and cast pieces are sculpture even when they're usable (Studio Shrine Bench, Nine Rests sawhorses, the Moth case). The Furniture tab is only for Core Studio Furniture work. Ask before moving a piece between sections.
+- Sculpture vs furniture: alican's carved and cast pieces are sculpture even when they're usable (Studio Shrine Bench, Nine Rests sawhorses, the Moth case). The Furniture tab is only for Core Studio Furniture work. Ask before moving a piece between sections. On the home page, sculpture projects sit in the Sculpture group, never in a section of their own.
+- Retired: Wood Lenses (removed 2026-11-18 at alican's request; `/wood-lenses` redirects to `/robotics`; backup in the project files and git history). Don't bring it back unless alican asks.
 - No outside artists' names or inspiration credits on public pages. Credit only the maker of a photo or product that appears on the page.
 - Renders for the site run on cloud machines (this session, RenderBeamer, GarageFarm), never on alican's Mac; the Mac is only for downloads and moving files.
 - Only show finished work: final renders and site stills go up once the design is locked. A page about something unbuilt says so at the top.

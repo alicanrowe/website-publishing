@@ -1,0 +1,9 @@
+# Lessons from site work
+
+Dated, newest first. Each lesson is also written into the reference it belongs to.
+
+## 2026-11-18
+- **Inline template, drawing labels.** First test of the project-page template: an 860-unit SVG shown 460 px wide turned 15-unit labels into 8 px text, and captions were left-aligned under centred media. Fixed by sizing labels for the shown width (inline-layout.md) and one square frame per column with centred captions (template).
+- **Home page plumb line (GRAVITY / GRACE).** The home page is `layout: raw`: a full HTML document of its own, with no shared header, nav or footer added by the build, so nav or font changes in `site.css` don't reach it and have to be made there too. The plumb line swings on scroll or touch and only turns firebrick, with GRAVITY and GRACE, when it comes to rest: that is the only place the red appears. Motion changes need several screenshots or a recording to check, not one still. (A polish pass on the pendulum and label legibility was under way; its lessons get added here when it lands.)
+- **MouthPad photo (PR #2).** Someone else's product photo: use their largest original (1632 x 805 from the maker's site), keep it unaltered, credit and link them in a mono caption under it, give the `<img>` its real width and height, cap it at 900 px on desktop and full column on phone, and check both widths before the PR. A white-background product shot sits straight on the page with no frame.
+- **Moth: viewer and drawing inline.** The 3D viewer and the dimension drawing were in separate sections, so nobody read them together and a stale viewer went unnoticed. They now sit side by side with the spec table (inline-layout.md). The same page shows the cost of stacking overrides: `.ds-stand` ended up defined six times with `!important`. Change the rule in place (site-structure.md); `lint_page.py` warns when a selector is defined three or more times.

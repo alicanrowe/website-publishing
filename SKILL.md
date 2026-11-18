@@ -35,7 +35,7 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 5. Only screenshots that passed go to alican.
 
 ## PR and deploy
-Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. Merging to `main` publishes the site in about a minute; check the live page once it's up.
+Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (alican's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute; check the live page at both widths once it's up and send alican the link.
 
 ## Keep this skill improving
 When a site change goes wrong, or alican corrects something on a page, write the lesson into the matching reference (and `references/lessons.md`, dated) in the same session, add a check to `scripts/lint_page.py` if a script could have caught it, then commit and push to this skill's repo. No private data: no emails, home paths, client names or unpublished prices.

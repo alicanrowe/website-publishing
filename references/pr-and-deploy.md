@@ -19,4 +19,6 @@ Cloudflare Pages builds `main` with `pip install -r requirements.txt && python3 
 After merge, open the live page at both widths and confirm the change is there and nothing else moved. If something broke, a revert PR is the fastest fix.
 
 ## Who merges
-alican merges. A session can open, update and mark a PR ready, but merging (publishing) waits for alican, unless alican asked for that exact change to go live.
+The session that opened the PR merges it when it is ready, without asking. This is alican's standing rule (18 Nov 2026: "merge without asking forever"). Ready means: the checks in SKILL.md passed (lint, shoot, theme_audit with no FAIL), the screenshots were looked at and the fix list is empty, and the branch is up to date with `main`. Then merge, open the live page at both widths, and tell alican it is live with the link. Don't wait for a reply first, and don't ask "shall I merge?".
+
+Still stop and ask before merging only when the PR does something alican didn't ask for (see the scope rule in SKILL.md) or a check is still failing. A merge is easy to undo with a revert PR, so when unsure whether something looks right, merge, say what you're unsure of, and revert if alican says so.

@@ -16,6 +16,8 @@ Flags (exit 1 if any ERROR):
   WARN   video over 15 MB
   WARN   the same CSS selector defined 3+ times in the page (patch the rule, don't stack overrides)
   WARN   style rules in the page that don't start with a page prefix (they can leak into other pages)
+  ERROR  the same project shown twice on one page (two tiles, bands or heroes in different
+         sections linking to the same page; anchors like /nine-rests#rest count as /nine-rests)
   WARN   brand slips: font-weight 400+ on Newsreader text, Jost, pure #000 body text, rounded corners, box shadows
 """
 import argparse, os, re, sys, json, collections
@@ -109,6 +111,24 @@ for f in targets:
         if not re.search(r'\balt=', tag): say('ERROR', f, f'<img> without alt: {s}')
         if not (re.search(r'\bwidth=', tag) and re.search(r'\bheight=', tag)) and 'aria-hidden' not in tag:
             say('WARN', f, f'<img> without width/height: {s}')
+
+    # never show the same project twice on one page: count, per linked page, the sections
+    # (hero, band, grid group, %% block) that hold a tile linking to it
+    main = re.sub(r'<header\b.*?</header>|<footer\b.*?</footer>|<nav\b.*?</nav>', '', body, flags=re.S)
+    chunks = re.split(r'<section\b|<div class="sec\b|^%%[^\n]*%%\s*$', main, flags=re.M)
+    where = collections.defaultdict(set)
+    tile = re.compile(r'<(?:a|div)\b[^>]*class="[^"]*\b(?:cell|panel|tile|ar-cell|ar-tile|nr9-c|card)\b[^"]*"[^>]*>'
+                      r'(?:\s*<div[^>]*data-href="([^"]+)")?', re.S)
+    for i, ch in enumerate(chunks):
+        for m in tile.finditer(ch):
+            tag = m.group(0)
+            h = re.search(r'\b(?:href|data-href)="(/[^"#?]*)', tag)
+            h = h.group(1) if h else (m.group(1) or '').split('#')[0]
+            if h and h not in ('/',) and h.rstrip('/') != u.rstrip('/'):
+                where[h.rstrip('/')].add(i)
+    for h, secs in sorted(where.items()):
+        if len(secs) > 1:
+            say('ERROR', f, f'{h} is shown in {len(secs)} places on this page (show each project once)')
 
     if 'class="ar3d' in body and '/assets/viewer.js' not in body:
         say('ERROR', f, '3D viewer (.ar3d) but no <script src="/assets/viewer.js" defer>')

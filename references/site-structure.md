@@ -49,6 +49,9 @@ The body is a run of sections, each opened by an Obsidian comment line (hidden i
 | `%% html %%` | Hand-built HTML, written as is. Relative `img/` and `files/` paths are made absolute for you. |
 | `%% text area=1/2/3/4 %%` | Places a section in a grid area (rarely used). |
 
+## One project, one place per page
+Never show the same project twice on one page. If a project is already in the hero or a band at the top, it stays out of the grid groups below, even when it belongs to that group. Small text links ("designed with…", "all skills") are fine; a second tile, band or hero is not. `lint_page.py` errors when two sections link tiles to the same page (anchors such as `/nine-rests#rest` count as `/nine-rests`).
+
 ## Hand-built pages
 Most project pages (moth, mouthpad, dancers, fairy ring, k) are mostly `%% html %%` with one `<style>` block near the top.
 - Give every class on the page a short page prefix (`mp-` for mouthpad, `ds-` for moth) so rules can't leak into other pages or the shared CSS.

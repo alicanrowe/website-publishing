@@ -57,12 +57,14 @@ for (const p of pages) {
     page.on('console', m => { if (m.type() === 'error') issues.push('console: ' + m.text()); });
     page.on('pageerror', e => issues.push('js error: ' + e.message));
     page.on('response', r => { if (r.status() >= 400) issues.push(`${r.status()}: ${r.url().replace(base, '')}`); });
-    await page.goto(base + p, { waitUntil: 'networkidle' });
+    // pages with looping video never go network-idle: wait for load, then idle at most 10 s
+    await page.goto(base + p, { waitUntil: 'load', timeout: 60000 });
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
     // scroll through so lazy images and 3D viewers load
     const H = await page.evaluate(() => document.documentElement.scrollHeight);
     for (let y = 0; y < H; y += h * 0.8) { await page.evaluate(v => window.scrollTo(0, v), y); await page.waitForTimeout(120); }
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
     await page.waitForTimeout(wait);
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (sideways > 1) issues.push(`page scrolls sideways by ${sideways}px`);

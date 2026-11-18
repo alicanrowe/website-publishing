@@ -1,7 +1,7 @@
 ---
 title: "piece name"
 url: "/piece-name"
-nav: "core studio furniture"
+nav: "furniture"
 description: "One sentence: what the piece is, the material, what's special about it."
 draft: true
 ---

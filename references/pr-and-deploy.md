@@ -1,6 +1,7 @@
 # PR and deploy
 
 ## Branch and commit
+- Commit as alican, per repo (not `--global`): `git config user.name "Alican Rowe"`, `git config user.email "357772129+alicanrowe@users.noreply.github.com"`, `git config commit.gpgsign false`. No session links or "generated with" footers; check with `git log -1 --format='%an <%ae> | %cn <%ce>'` before pushing. The site repo's CONTRIBUTING.md has the same rule.
 - Start from the latest `main`; several sessions change the site on the same day. Fetch again right before opening the PR and merge `main` in if it moved.
 - One PR per change alican asked for. Don't fold unrelated fixes in.
 - Commit message: page name, colon, what changed, in plain words (`MouthPad: add Augmental's product photo, credited, under The base`).

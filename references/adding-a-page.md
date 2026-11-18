@@ -1,7 +1,7 @@
 # Adding a project page
 
 1. **Branch** off the latest `main`.
-2. **Pick the URL and nav.** Short, lowercase, dashes (`/studio-shrine-bench`). `nav` is the section it belongs to (`core studio furniture`, `robotics`, `sculpture`, `info`, `mandelbulbs`). Sub-pages of a series use a path (`/digital/syd`) and a note named `series_page.md`.
+2. **Pick the URL and nav.** Short, lowercase, dashes (`/studio-shrine-bench`). `nav` is the section it belongs to (`sculpture`, `furniture`, `robotics`, `ai`, `mandelbulbs`, `info`; skills and AI work go under `ai`). Sub-pages of a series use a path (`/digital/syd`) and a note named `series_page.md`.
 3. **Copy `templates/project-page.md`** to `content/<slug>.md`. Replace the `pp-` prefix with a short prefix of your own that no other page uses (`grep -o 'class="[a-z]*-' content/*.md | sort -u`). Keep `draft: true` until it's checked.
 4. **Media.** Images to `content/img/<slug>/`, GLBs to `static/3d/<slug>/`, videos and PDFs to `content/files/`. Prepare them first (media.md).
 5. **Fill it in.** Title, a two-to-three sentence intro, the render / viewer / drawing row, text and spec table. Extra sections (process, details, galleries) go after, each with a `.pp-h` heading. Plain sentences, no marketing words.

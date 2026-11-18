@@ -20,6 +20,7 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 - A piece with a model: render, 3D viewer and dimension drawing sit inline, side by side, with the spec table under them (`references/inline-layout.md`). Never put the viewer and its drawing in separate sections.
 - Images, video and GLBs: size and compress them before committing (`references/media.md`). Full-size originals stay outside the repo.
 - Someone else's image (a maker's product photo, a reference): their largest original, credited and linked in a mono caption under it.
+- Show each project once per page: nothing in a grid that is already in the hero or a band above it.
 - Only show finished work: final renders and site stills go up once the design is locked. A page about something unbuilt says so at the top.
 
 ## Check before the PR (make-and-check loop)

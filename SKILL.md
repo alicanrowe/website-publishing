@@ -25,8 +25,9 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 ## Check before the PR (make-and-check loop)
 1. `python3 scripts/lint_page.py --site <repo> <page>`: no errors; read every warning on the page you touched.
 2. `node scripts/shoot.mjs --site <repo> --out <dir> /<url>`: builds the site and screenshots the page at 1440 and 390 wide, and reports console errors, 404s, broken images, viewers that didn't load and sideways scroll on phone.
-3. Look at both screenshots against the brand, the page's neighbours on the site, and any reference alican named. Write down everything that's off, fix it, shoot again. Repeat until nothing is on the list (`references/check-loop.md`).
-4. Only screenshots that passed go to alican.
+3. `node scripts/theme_audit.mjs --site <repo>`: every page on the site, checked against the brand theme in the browser. No FAIL lines (see `references/check-loop.md`).
+4. Look at both screenshots against the brand, the page's neighbours on the site, and any reference alican named. Write down everything that's off, fix it, shoot again. Repeat until nothing is on the list (`references/check-loop.md`).
+5. Only screenshots that passed go to alican.
 
 ## PR and deploy
 Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. Merging to `main` publishes the site in about a minute; check the live page once it's up.

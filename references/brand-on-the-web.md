@@ -15,6 +15,15 @@ A white page with a lot of empty space. Light, thin serif (Newsreader 200 and 30
 
 Gaps: 12px between columns, 20px between rows, 6px in galleries. Text columns max 526px (notes) or 700px (intro), never full width. Empty image slots `#F3F3F3`. Links underlined with a 2px offset, same colour as the text. Phone: one column, 23px gutters, same type sizes (drawings may scale their labels up so they stay readable).
 
+## One header on every page
+The home page is a raw page with its own header, so it drifts from the shared header in `site.css` / `site.json` unless both are changed together. Same nav labels, order, size and colour, same logo position, on desktop and in the phone menu. `theme_audit.mjs` fails any page whose header differs from the rest.
+
+## Weights
+`site.css` maps any Newsreader weight from 251 to 900 onto the 300 cut, so `<strong>`, `<b>` or `font-weight:400` still draw the light face rather than a fake bold. Still write 200 or 300 in page styles; the audit warns on 400+.
+
+## Accent colour
+Grey ink only for text, numbers, labels and links. The dark red `#96281c` belongs to dimensions on drawings (SVG text and dimension lines), not to step numbers, section labels or "view on" links in the page text.
+
 ## Never on the site
 - The moth custom theme (near-black, warm white, terracotta, blackletter). It belongs to the moth case's own material, not the site shell. Pages may use it inside their own section only when alican asks.
 - Plex Mono as body text; Jost; weight 400+ Newsreader.

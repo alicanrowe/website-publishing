@@ -24,6 +24,12 @@ Open both widths and look at them as alican would. Compare against:
 
 Write down every problem as a list: alignment, cropping, text too small or too faint, captions that wrap badly, a viewer framed too tight, a drawing whose labels are unreadable on phone, a gap that's bigger on one side, anything that moved that shouldn't have.
 
+## 3b. Theme audit across the whole site
+```
+node scripts/theme_audit.mjs --site <repo>
+```
+Builds the site and opens **every** page at 1440 and 390, reads what the browser actually draws (computed styles, not the source) and flags: fonts other than Newsreader / Plex Mono, Newsreader asked for at 400+, text colours outside the grey inks and nav colours, text on coloured plates, a page background that isn't white, boxes with a border all round, rounded corners, shadows and gradients, and any page whose header (nav labels, order, logo position, nav size and colour, bar colour) differs from the rest. Run it for every PR, not just the page you touched: a change to `site.css`, `site.json` or the home page's own header reaches pages you never opened. A FAIL is fixed before the PR, or added to `ALLOW` in the script with the reason once it is approved (the moth custom theme, drawn app screens). Exit code 1 means a FAIL.
+
 ## 4. Fix and repeat
 Fix the list, shoot again, look again. Repeat until a pass finds nothing. Then check one level wider: the index page that links to it, and the home page if it changed.
 

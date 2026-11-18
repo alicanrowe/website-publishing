@@ -21,6 +21,10 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 - Images, video and GLBs: size and compress them before committing (`references/media.md`). Full-size originals stay outside the repo.
 - Someone else's image (a maker's product photo, a reference): their largest original, credited and linked in a mono caption under it.
 - Show each project once per page: nothing in a grid that is already in the hero or a band above it.
+- Project cards everywhere are the home page card: a 4:5 window on the cyc, the name in caps on the left and one fact in mono on the right (`.ar-cards` / `.ar-card`, or `%% portfolio %%`; see `references/inline-layout.md`). A project with a 3D model gets the model in its card, as on the home page.
+- One header on every page, laid out as on the home page: work nav on the left, logo in the centre, studio nav on the right, a burger on phones. Nav buttons never move between pages. Every category in the nav links to its own page (`/sculpture`, `/robotics`), never to the home page or an anchor on it.
+- No outside artists' names or inspiration credits on public pages. Credit only the maker of a photo or product that appears on the page.
+- Renders for the site run on cloud machines (this session, RenderBeamer, GarageFarm), never on alican's Mac; the Mac is only for downloads and moving files.
 - Only show finished work: final renders and site stills go up once the design is locked. A page about something unbuilt says so at the top.
 
 ## Check before the PR (make-and-check loop)

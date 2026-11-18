@@ -16,7 +16,7 @@ A white page with a lot of empty space. Light, thin serif (Newsreader 200 and 30
 Gaps: 12px between columns, 20px between rows, 6px in galleries. Text columns max 526px (notes) or 700px (intro), never full width. Empty image slots `#F3F3F3`. Links underlined with a 2px offset, same colour as the text. Phone: one column, 23px gutters, same type sizes (drawings may scale their labels up so they stay readable).
 
 ## One header on every page
-The home page is a raw page with its own header, so it drifts from the shared header in `site.css` / `site.json` unless both are changed together. Same nav labels, order, size and colour, same logo position, on desktop and in the phone menu. `theme_audit.mjs` fails any page whose header differs from the rest.
+The home page is a raw page with its own header, so it drifts from the shared header in `site.css` / `site.json` unless both are changed together. Same nav labels, order, size and colour, same logo position, on desktop and in the phone menu. The layout is the home page's: work nav (Sculpture, Furniture, Robotics, AI) on the left, the logo centred, studio nav (Mandelbulbs, Info, Commissions) on the right; on phones the logo on the left and a burger on the right. In `site.json` each nav item has `side: left|right`. `theme_audit.mjs` fails any page whose nav words sit more than 1% of the width away from where they sit on the home page, or whose header type differs from the rest.
 
 ## Weights
 `site.css` maps any Newsreader weight from 251 to 900 onto the 300 cut, so `<strong>`, `<b>` or `font-weight:400` still draw the light face rather than a fake bold. Still write 200 or 300 in page styles; the audit warns on 400+.

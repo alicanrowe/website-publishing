@@ -72,8 +72,11 @@ for (const [name, w] of [['desktop', 1440], ['phone', 390]]) for (const pg of pa
     const hdr = document.querySelector('header'); if (hdr) {
       const cs = getComputedStyle(hdr); const logo = hdr.querySelector('.ar-logo,.mark');
       o.header = { bg: cs.backgroundColor, logoX: logo ? Math.round(logo.getBoundingClientRect().left / innerWidth * 100) : null };
-      o.nav = [...hdr.querySelectorAll('nav a')].map(a => a.textContent.trim().toLowerCase());
-      const a0 = hdr.querySelector('nav a'); if (a0) { const c = getComputedStyle(a0); o.header.nav = `${c.fontSize} ${c.color}`; }
+      // only the links you can see, each with where it sits (% of the width), so a nav that moves sides shows up
+      const vis = [...hdr.querySelectorAll('nav a')].filter(a => { const r = a.getBoundingClientRect(), c = getComputedStyle(a);
+        return r.width > 0 && c.visibility !== 'hidden' && +getComputedStyle(a.closest('nav')).opacity !== 0; });
+      o.nav = vis.map(a => `${a.textContent.trim().toLowerCase()}@${Math.round(a.getBoundingClientRect().left / innerWidth * 100)}`);
+      const a0 = vis[0] || hdr.querySelector('nav a'); if (a0) { const c = getComputedStyle(a0); o.header.nav = `${c.fontSize} ${c.color}`; }
     }
     for (const e of document.querySelectorAll('body *')) {
       const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') continue;
@@ -106,12 +109,15 @@ const okBg = c => { const v = rgb(c); if (!v) return true; const [r, g, b, al = 
 const rows = {}; let fails = 0;
 // group repeats by rule + element tag/class, keep the first text as the example
 const add = (pg, lvl, msg) => { const k = `${lvl} ${msg.replace(/ "[^"]*"$/, '')}`; (rows[pg] ||= new Map()); if (lvl === 'FAIL' && !rows[pg].has(k)) fails++; rows[pg].set(k, (rows[pg].get(k) || 0) + 1); };
-const headers = {};
+const headers = {}, hstyle = {};
 for (const [key, o] of Object.entries(raw)) {
   const [pg, view] = key.split(' ');
   const allow = Object.entries(ALLOW).find(([p]) => pg.startsWith(p))?.[1] || {};
   if (!okBg(o.page)) add(pg, 'FAIL', `page background ${o.page} (brand: white)`);
-  if (o.header) (headers[view] ||= {})[pg] = `${o.nav.join(' | ')} :: logo at ${o.header.logoX}% :: nav ${o.header.nav} :: bg ${o.header.bg}`;
+  if (o.header) {
+    (headers[view] ||= {})[pg] = `${o.nav.join(' | ')} :: logo at ${o.header.logoX}%`;
+    (hstyle[view] ||= {})[pg] = `nav ${o.header.nav}`;
+  }
   for (const t of o.text) {
     if (!['Newsreader', 'IBM Plex Mono'].includes(t.fam) && !(allow.fonts || []).includes(t.fam)) add(pg, 'FAIL', `font ${t.fam}: ${t.el}`);
     if (t.fam === 'Newsreader' && !['200', '300'].includes(t.w)) add(pg, 'WARN', `Newsreader ${t.w} asked for (renders the 300 cut, but set 200/300): ${t.el}`);
@@ -121,12 +127,22 @@ for (const [key, o] of Object.entries(raw)) {
   }
   for (const b of o.boxes) add(pg, 'WARN', b);
 }
-// shared header: every page should carry the same nav labels, order, size and colour
+// shared header: every page puts the same nav words in the same places as the home page (alican's rule:
+// buttons never jump sides between pages), with the same type. Positions are compared to "/" when it was audited.
 for (const [view, hs] of Object.entries(headers)) {
+  const count = {}; for (const h of Object.values(hs)) count[h] = (count[h] || 0) + 1;
+  const std = hs['/'] || Object.entries(count).sort((x, y) => y[1] - x[1])[0]?.[0];
+  const near = (h) => { const [n1, l1] = h.split(' :: '), [n2, l2] = std.split(' :: ');
+    const A = n1.split(' | ').filter(Boolean), B = n2.split(' | ').filter(Boolean); if (A.length !== B.length || l1 !== l2) return false;
+    return A.every((x, i) => { const [w1, p1] = x.split('@'), [w2, p2] = B[i].split('@'); return w1 === w2 && Math.abs(p1 - p2) <= 1; }); };
+  for (const [pg, h] of Object.entries(hs)) if (!near(h))
+    add(pg, 'FAIL', `${view} nav not in the home page's places: ${h}  (home: ${std})`);
+}
+for (const [view, hs] of Object.entries(hstyle)) {
   const count = {}; for (const h of Object.values(hs)) count[h] = (count[h] || 0) + 1;
   const common = Object.entries(count).sort((x, y) => y[1] - x[1])[0]?.[0];
   for (const [pg, h] of Object.entries(hs)) if (h !== common && !(Object.entries(ALLOW).find(([p]) => pg.startsWith(p))?.[1].darkHeader))
-    add(pg, 'FAIL', `${view} header differs from the other pages: ${h}  (most pages: ${common})`);
+    add(pg, 'FAIL', `${view} nav type differs from the other pages: ${h}  (most pages: ${common})`);
 }
 for (const pg of pages) {
   const m = rows[pg]; if (!m) { console.log(`ok    ${pg}`); continue; }

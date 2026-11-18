@@ -54,7 +54,9 @@ for (const p of pages) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, isMobile: name === 'phone', hasTouch: name === 'phone' });
     const page = await ctx.newPage();
     const issues = [];
-    page.on('console', m => { if (m.type() === 'error') issues.push('console: ' + m.text()); });
+    // model-viewer logs this for instanced meshes (EXT_mesh_gpu_instancing); the model still draws correctly
+    const BENIGN = [/Mesh is missing primitive index association/];
+    page.on('console', m => { if (m.type() === 'error' && !BENIGN.some(r => r.test(m.text()))) issues.push('console: ' + m.text()); });
     page.on('pageerror', e => issues.push('js error: ' + e.message));
     page.on('response', r => { if (r.status() >= 400) issues.push(`${r.status()}: ${r.url().replace(base, '')}`); });
     // pages with looping video never go network-idle: wait for load, then idle at most 10 s

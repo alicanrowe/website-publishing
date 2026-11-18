@@ -52,11 +52,18 @@ for f in notes:
     m, _ = fm(open(os.path.join(CONTENT, f), encoding='utf-8').read())
     urls[m.get('url') or '/' + f[:-3]] += 1
 
+# site-wide: every nav item opens its own page; only the logo goes home
+for n in json.load(open(os.path.join(SITE, 'site.json'))).get('nav', []):
+    if n.get('url', '').rstrip('/') == '':
+        print(f"ERROR site.json: nav item '{n.get('label')}' links to the home page; give it its own page")
+        errors_site = True
+
 targets = notes if A.all else [p if p.endswith('.md') else p + '.md' for p in A.pages]
 if not targets:
     ap.error('name pages (e.g. mouthpad) or pass --all')
 
 errors = 0
+if 'errors_site' in globals(): errors += 1
 def say(level, page, msg):
     global errors
     if level == 'ERROR': errors += 1
@@ -117,7 +124,7 @@ for f in targets:
     main = re.sub(r'<header\b.*?</header>|<footer\b.*?</footer>|<nav\b.*?</nav>', '', body, flags=re.S)
     chunks = re.split(r'<section\b|<div class="sec\b|^%%[^\n]*%%\s*$', main, flags=re.M)
     where = collections.defaultdict(set)
-    tile = re.compile(r'<(?:a|div)\b[^>]*class="[^"]*\b(?:cell|panel|tile|ar-cell|ar-tile|nr9-c|card)\b[^"]*"[^>]*>'
+    tile = re.compile(r'<(?:a|div)\b[^>]*class="[^"]*\b(?:cell|panel|tile|ar-cell|ar-tile|nr9-c|card|ar-cap)\b[^"]*"[^>]*>'
                       r'(?:\s*<div[^>]*data-href="([^"]+)")?', re.S)
     for i, ch in enumerate(chunks):
         for m in tile.finditer(ch):
@@ -129,6 +136,23 @@ for f in targets:
     for h, secs in sorted(where.items()):
         if len(secs) > 1:
             say('ERROR', f, f'{h} is shown in {len(secs)} places on this page (show each project once)')
+
+    # project lists use the home page card everywhere: .ar-cards / .ar-card (or %% portfolio %%, which
+    # builds them). The older tile styles (rb-grid, ar-cell, ar-tile, ar-portfolio) look different from home.
+    if not raw:
+        for old in ('rb-grid', 'ar-cell', 'ar-tile', 'ar-portfolio'):
+            if re.search(r'class="[^"]*\b' + old + r'\b', body):
+                say('ERROR', f, f'project tiles use the old "{old}" style; use the home page card (.ar-cards > .ar-card, see inline-layout.md)')
+
+    # no outside artists or inspiration credits on public pages (alican's rule)
+    text = re.sub(r'<[^>]+>', ' ', re.sub(r'<(style|script)\b.*?</\1>|<!--.*?-->', ' ', body, flags=re.S))
+    for m in re.finditer(r'\b(inspired by|inspirations?:|inspiration from|homage to|in the style of|influenced by|after the work of|a nod to|tribute to)\b', text, re.I):
+        say('WARN', f, f'"{text[max(0, m.start() - 40):m.end() + 40].strip()}": no outside artists or inspiration credits on public pages')
+
+    # a hand-built header (layout: raw) follows the same rule: words in a <nav> never link to "/"
+    for nav in re.findall(r'<nav\b.*?</nav>', body, re.S):
+        for a in re.finditer(r'<a\b[^>]*href="/"[^>]*>([^<]+)</a>', nav):
+            say('ERROR', f, f'nav item "{a.group(1).strip()}" links to the home page; link its own page')
 
     if 'class="ar3d' in body and '/assets/viewer.js' not in body:
         say('ERROR', f, '3D viewer (.ar3d) but no <script src="/assets/viewer.js" defer>')

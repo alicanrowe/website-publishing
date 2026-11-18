@@ -21,6 +21,9 @@ Gaps: 12px between columns, 20px between rows, 6px in galleries. Text columns ma
 - Text on plates, scrims or boxes.
 - Firebrick red as a general accent. It appears once: the home page plumb line and GRAVITY / GRACE turning red when the line comes to rest.
 
+## Words over photos
+- White Newsreader 300, at least 12 to 13px, with a soft dark edge (a tight and a wide blurred dark copy behind it), never a hard light outline or halo. On the plain cyc, plain ink with no effect. Check legibility over the brightest and the busiest part of the image, and in every colour state the words can take.
+
 ## Drawings and diagrams on the site
 - Inline SVG, so text stays sharp and can use the site fonts: labels in Plex Mono, dimensions in a single dark red (`#96281c` on the moth drawings) with small filled arrowheads, hairline extension lines.
 - Fill parts in the materials' own light tones or `--ar-image-fill`, outlines in dark grey, never pure black blocks.

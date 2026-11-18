@@ -32,5 +32,5 @@ Post the passing desktop and phone screenshots (at `--scale 2`) with the PR. Kee
 
 ## Things that only show up in a real browser
 - 3D viewers: check the model's starting angle, that it isn't clipped, and that it loads on phone. Drag it once.
-- Motion (the home page plumb line, fades): take a short screen recording or several screenshots at different scroll positions; one still won't show it.
+- Motion (the home page plumb line, fades): take a short screen recording or several screenshots at different scroll positions; one still won't show it. Headless SwiftShader runs slowly, so physics takes far longer to settle than on a real device: wait 30 s or force the end state (for example add `.on`) to shoot it.
 - The live site after deploy: `https://www.alicanrowe.com/<page>` (Cloudflare can take a minute; reload without cache).

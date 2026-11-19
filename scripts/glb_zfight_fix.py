@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Remove z-fighting: delete faces that lie on another material's surface, facing the same way.
+"""Reduce z-fighting: sink vertices that sit on another material's surface (and, with --delete, remove covered faces).
+
+WARNING (19 Nov 2026): --delete tore the Moth saw blade and chisel. Thin parts made of two coincident
+layers lose real faces. Leave it off, and always run glb_fidelity_check.py against the full model after.
 
 For each mesh in turn, a face whose centre and three inner points all sit within EPS of a
 surface of another mesh with a different material, with normals agreeing (dot > 0.8), is
@@ -13,6 +16,8 @@ import sys as _s
 if '--' in _s.argv: _s.argv=[_s.argv[0]]+_s.argv[_s.argv.index('--')+1:]
 import bpy,bmesh,sys,mathutils
 from mathutils.bvhtree import BVHTree
+DELETE='--delete' in sys.argv
+sys.argv=[x for x in sys.argv if x!='--delete']
 src,dst=sys.argv[1],sys.argv[2]
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=src)
@@ -47,7 +52,7 @@ for o in objs:
                 h=t.find_nearest(q,EPS)
                 if h[0] is None or f.normal.dot(h[1])<=0.8: ok=False; break
             if ok: kill.append(f); break
-    if kill:
+    if kill and DELETE:
         total+=len(kill)
         bmesh.ops.delete(bm,geom=kill,context='FACES')
         bm.transform(o.matrix_world.inverted())

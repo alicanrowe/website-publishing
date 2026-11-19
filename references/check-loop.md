@@ -50,7 +50,8 @@ Version lines in `tools/sources.json` (per page): `{"line": "case", "model": "<g
 python3 scripts/glb_grain_check.py model.glb        # UVs: grain along every part
 python3 scripts/glb_texture_check.py model.glb      # the texture itself: straight grain along U, not flat-sawn figure
 blender -b -P scripts/glb_zfight_check.py -- model.glb   # coincident surfaces of different materials (flicker)
-blender -b -P scripts/glb_zfight_fix.py -- in.glb out.glb # delete covered faces, sink partly covered ones
+blender -b -P scripts/glb_zfight_fix.py -- in.glb out.glb # sink covered vertices (--delete removes faces: tore thin parts once)
+blender -b -P scripts/glb_fidelity_check.py -- full.glb web.glb   # every part of the web model against the full model: crushed, torn, missing
 ```
 Then look at the model in the viewer up close from three sides: numbers alone passed a swirly texture once.
 

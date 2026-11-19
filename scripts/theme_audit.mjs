@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Site-wide brand theme audit for alicanrowe.com.
+// Site-wide brand theme audit for the owner's site.
 // Builds the site, opens EVERY page at desktop (1440) and phone (390), reads the computed style of
 // everything on screen and lists what doesn't match the brand theme (references/brand-on-the-web.md).
 // lint_page.py reads the page source; this reads what the browser actually draws, so it also catches
 // browser defaults (bold <strong>), shared-header drift and styles that come from site.css.
 //
-//   node scripts/theme_audit.mjs --site /path/to/alicanrowe-site            # every page
+//   node scripts/theme_audit.mjs --site /path/to/site-repo            # every page
 //   node scripts/theme_audit.mjs --site ... --json audit.json /dancers /moth # some pages, save raw data
 //   options: --no-build
 //
@@ -127,7 +127,7 @@ for (const [key, o] of Object.entries(raw)) {
   }
   for (const b of o.boxes) add(pg, 'WARN', b);
 }
-// shared header: every page puts the same nav words in the same places as the home page (alican's rule:
+// shared header: every page puts the same nav words in the same places as the home page (the owner's rule:
 // buttons never jump sides between pages), with the same type. Positions are compared to "/" when it was audited.
 for (const [view, hs] of Object.entries(headers)) {
   const count = {}; for (const h of Object.values(hs)) count[h] = (count[h] || 0) + 1;

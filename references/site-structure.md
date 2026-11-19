@@ -12,7 +12,7 @@
 | `tools/build.py` | The builder. |
 | `preview/` | Reference screenshots of key pages. |
 
-The content folder is also an Obsidian vault: alican edits words there, so keep notes readable in Obsidian (sections, plain Markdown where possible).
+The content folder is also an Obsidian vault: the owner edits words there, so keep notes readable in Obsidian (sections, plain Markdown where possible).
 
 ## Build
 ```
@@ -32,7 +32,7 @@ nav: "robotics"
 description: "One sentence for search results and link previews."
 ---
 ```
-- `title`: the browser tab reads `title — alican rowe`.
+- `title`: the browser tab reads `title — the owner rowe`.
 - `url`: the address. Sub-pages use a path (`/digital/syd`). Changing a live URL means adding the old one to `redirects` in `site.json`.
 - `nav`: which nav label is highlighted (must match a label in `site.json`).
 - `draft: true` hides the page. `unlisted: true` builds it but leaves it out of nav and sitemap, with `noindex`.
@@ -53,7 +53,7 @@ The body is a run of sections, each opened by an Obsidian comment line (hidden i
 Never show the same project twice on one page. If a project is already in the hero or a band at the top, it stays out of the grid groups below, even when it belongs to that group. Small text links ("designed with…", "all skills") are fine; a second tile, band or hero is not. `lint_page.py` errors when two sections link tiles to the same page (anchors such as `/nine-rests#rest` count as `/nine-rests`).
 
 ## Hand-built pages
-Most project pages (moth, mouthpad, dancers, fairy ring, k) are mostly `%% html %%` with one `<style>` block near the top.
+Most project pages (moth, mouthpad, dancers, the robot project, k) are mostly `%% html %%` with one `<style>` block near the top.
 - Give every class on the page a short page prefix (`mp-` for mouthpad, `ds-` for moth) so rules can't leak into other pages or the shared CSS.
 - Use the theme variables already in `site.css` (`--ar-ink`, `--ar-mono`, `--ar-serif`, `--ar-nav`, `--ar-image-fill`) rather than typing colours and fonts again.
 - Change a rule where it is. Appending another override for the same selector (with `!important`) is how the moth page ended up with six `.ds-stand` rules fighting each other. `lint_page.py` warns at three.

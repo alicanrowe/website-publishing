@@ -1,6 +1,6 @@
 # The brand on the site
 
-The full theme lives in the brand folder (`THEME.md`, `theme.json`, `theme.css`, fonts, `logo.svg`). In alican's project it is mirrored at `/mnt/project-files/brand/`. Read `THEME.md` there before designing anything new. `site.css` already carries the same tokens as `--ar-*` variables; use those on pages.
+The full theme lives in the brand folder (`THEME.md`, `theme.json`, `theme.css`, fonts, `logo.svg`). Read `THEME.md` there before designing anything new. `site.css` already carries the same tokens as `--ar-*` variables; use those on pages.
 
 ## The look
 A white page with a lot of empty space. Light, thin serif (Newsreader 200 and 300 only, never bold). Uppercase for nav, titles and labels; sentence case for body. Soft grey ink, not pure black. IBM Plex Mono only for small factual lines: dimensions, spec tables, captions, credits, footer. Media runs almost edge to edge with thin, even gaps. No boxes, cards, borders around content, shadows, rounded corners, gradients or filled buttons. Motion is slow fades and hairline draws, never slides or bounces.
@@ -16,7 +16,7 @@ A white page with a lot of empty space. Light, thin serif (Newsreader 200 and 30
 Gaps: 12px between columns, 20px between rows, 6px in galleries. Text columns max 526px (notes) or 700px (intro), never full width. Empty image slots `#F3F3F3`. Links underlined with a 2px offset, same colour as the text. Phone: one column, 23px gutters, same type sizes (drawings may scale their labels up so they stay readable).
 
 ## The current page look (the Nine Rests sheet)
-New and reworked project pages follow `content/nine-rests.md`: a left-aligned column up to 1240px, the title in Newsreader 300 caps (21.23px), the subtitle as plain body text (not grey tracked caps), a 0.5px hairline between sections, numbers, kickers and facts in Plex Mono 11.5px, captions in 11px caps, and no boxed cards. Older pages that were centred with grey tracked subtitles and bordered cards read as outdated; Fairy Ring and The Dancers were brought over with `assets/lc-sheet.css`, Info was rebuilt. A page passing `theme_audit.mjs` can still look old: compare it side by side with Nine Rests at both widths.
+New and reworked project pages follow `content/nine-rests.md`: a left-aligned column up to 1240px, the title in Newsreader 300 caps (21.23px), the subtitle as plain body text (not grey tracked caps), a 0.5px hairline between sections, numbers, kickers and facts in Plex Mono 11.5px, captions in 11px caps, and no boxed cards. Older pages that were centred with grey tracked subtitles and bordered cards read as outdated; the robot project and The Dancers were brought over with `assets/lc-sheet.css`, Info was rebuilt. A page passing `theme_audit.mjs` can still look old: compare it side by side with Nine Rests at both widths.
 
 ## One header on every page
 The home page is a raw page with its own header, so it drifts from the shared header in `site.css` / `site.json` unless both are changed together. Same nav labels, order, size and colour, same logo position, on desktop and in the phone menu. The layout is the home page's: work nav (Sculpture, Furniture, Robotics, AI) on the left, the logo centred, studio nav (Mandelbulbs, Info, Commissions) on the right; on phones the logo on the left and a burger on the right. In `site.json` each nav item has `side: left|right`. `theme_audit.mjs` fails any page whose nav words sit more than 1% of the width away from where they sit on the home page, or whose header type differs from the rest.
@@ -28,7 +28,7 @@ The home page is a raw page with its own header, so it drifts from the shared he
 Grey ink only for text, numbers, labels and links. The dark red `#96281c` belongs to dimensions on drawings (SVG text and dimension lines), not to step numbers, section labels or "view on" links in the page text.
 
 ## Never on the site
-- The moth custom theme (near-black, warm white, terracotta, blackletter). It belongs to the moth case's own material, not the site shell. Pages may use it inside their own section only when alican asks.
+- The moth custom theme (near-black, warm white, terracotta, blackletter). It belongs to the moth case's own material, not the site shell. Pages may use it inside their own section only when the owner asks.
 - Plex Mono as body text; Jost; weight 400+ Newsreader.
 - Text on plates, scrims or boxes.
 - Firebrick red as a general accent. It appears once: the home page plumb line and GRAVITY / GRACE turning red when the line comes to rest.

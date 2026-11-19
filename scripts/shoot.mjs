@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Build alicanrowe.com and screenshot pages at desktop (1440) and phone (390) widths.
+// Build the owner's site and screenshot pages at desktop (1440) and phone (390) widths.
 // Also reports console errors, failed requests, and sideways scroll on phone.
 //
-//   node scripts/shoot.mjs --site /path/to/alicanrowe-site --out shots/ /mouthpad /moth
+//   node scripts/shoot.mjs --site /path/to/site-repo --out shots/ /mouthpad /moth
 //   options: --no-build  --scale 2 (for screenshots a person will see)  --only desktop|phone
 //            --wait 3000 (extra ms for 3D viewers)  --prefix before-
 import { createRequire } from 'node:module';

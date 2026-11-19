@@ -1,6 +1,6 @@
-# Website publishing skill (alicanrowe.com)
+# Website publishing skill (the owner's site)
 
-A Claude skill for adding and changing pages on [alicanrowe.com](https://www.alicanrowe.com): a static site built from Markdown notes (an Obsidian vault) by a small Python builder and hosted on Cloudflare Pages.
+A Claude skill for adding and changing pages on the owner's site: a static site built from Markdown notes (an Obsidian vault) by a small Python builder and hosted on Cloudflare Pages.
 
 It covers how pages are put together, the brand theme on the web, the inline render / 3D viewer / dimension drawing layout with a spec table, adding a project page, image, video and GLB optimisation, a screenshot check loop, and the PR and deploy flow. The other skills (hardwood furniture CAD, sculpted metal casting, concrete mold casting) hand their outputs to this one for the site part.
 
@@ -26,8 +26,8 @@ It covers how pages are put together, the brand theme on the web, the inline ren
 
 ## Quick start
 ```
-python3 scripts/lint_page.py --site ~/alicanrowe-site mouthpad
-node scripts/shoot.mjs --site ~/alicanrowe-site --out shots /mouthpad
+python3 scripts/lint_page.py --site ~/site-repo mouthpad
+node scripts/shoot.mjs --site ~/site-repo --out shots /mouthpad
 ```
 
 ## Authors

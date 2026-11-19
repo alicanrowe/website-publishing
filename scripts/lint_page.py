@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Check alicanrowe.com page notes before a PR.
+"""Check the owner's site page notes before a PR.
 
-    python3 scripts/lint_page.py --site /path/to/alicanrowe-site mouthpad moth
-    python3 scripts/lint_page.py --site /path/to/alicanrowe-site --all
+    python3 scripts/lint_page.py --site /path/to/site-repo mouthpad moth
+    python3 scripts/lint_page.py --site /path/to/site-repo --all
 
 Flags (exit 1 if any ERROR):
   ERROR  front matter missing title or url, or url clashes with another page
@@ -144,7 +144,7 @@ for f in targets:
             if re.search(r'class="[^"]*\b' + old + r'\b', body):
                 say('ERROR', f, f'project tiles use the old "{old}" style; use the home page card (.ar-cards > .ar-card, see inline-layout.md)')
 
-    # no outside artists or inspiration credits on public pages (alican's rule)
+    # no outside artists or inspiration credits on public pages (the owner's rule)
     text = re.sub(r'<[^>]+>', ' ', re.sub(r'<(style|script)\b.*?</\1>|<!--.*?-->', ' ', body, flags=re.S))
     for m in re.finditer(r'\b(inspired by|inspirations?:|inspiration from|homage to|in the style of|influenced by|after the work of|a nod to|tribute to)\b', text, re.I):
         say('WARN', f, f'"{text[max(0, m.start() - 40):m.end() + 40].strip()}": no outside artists or inspiration credits on public pages')

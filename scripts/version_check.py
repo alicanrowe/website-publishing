@@ -4,7 +4,7 @@
 Looks at every media path a page uses (src, data-src, data-model, poster, markdown images).
 When a file name carries a version (v6s, v6w, r9, -v2, _1117b ...) and the same folder holds
 a file with the same stem and a later version, the page is flagged. Run before every site PR
-(alican's rule: every page matches the latest version of its project).
+(the owner's rule: every page matches the latest version of its project).
 
   python3 scripts/version_check.py --site <repo>
 Exit code 1 when something is behind.

@@ -28,7 +28,7 @@ The home page is a raw page with its own header, so it drifts from the shared he
 Grey ink only for text, numbers, labels and links. The dark red `#96281c` belongs to dimensions on drawings (SVG text and dimension lines), not to step numbers, section labels or "view on" links in the page text.
 
 ## Never on the site
-- The moth custom theme (near-black, warm white, terracotta, blackletter). It belongs to the moth case's own material, not the site shell. Pages may use it inside their own section only when the owner asks.
+- No custom page themes. The old moth theme (near-black, warm white, terracotta, script and blackletter titles, dark header) was retired on 19 Nov 2026; the Moth page uses the site theme like every other page.
 - Plex Mono as body text; Jost; weight 400+ Newsreader.
 - Text on plates, scrims or boxes.
 - Firebrick red as a general accent. It appears once: the home page plumb line and GRAVITY / GRACE turning red when the line comes to rest.

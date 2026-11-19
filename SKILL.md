@@ -31,18 +31,20 @@ The whole site stays on the brand theme, and every project page matches the late
 - No outside artists' names or inspiration credits on public pages. Credit only the maker of a photo or product that appears on the page.
 - Renders for the site run on cloud machines (this session, RenderBeamer, GarageFarm), never on the owner's Mac; the Mac is only for downloads and moving files.
 - When a project moves to a new version, every still on its page is re-rendered from the new model or taken down the same day. An old render stays up only in a section that says it's history (iterations, prototypes). Removed features go with their renders and captions (the Moth tool box, the stainless sheets).
+- Every page is on the one site theme (shared light header, Newsreader 200/300, Plex Mono only for small numbers and dimensions, white page). There are no per-page custom themes: the Moth night band, script title and dark header were retired on 19 Nov 2026 at the owner's request. Don't add an exception to `theme_audit.mjs` ALLOW to get a page through.
 - Only show finished work: final renders and site stills go up once the design is locked. A page about something unbuilt says so at the top.
 
 ## Check before the PR (make-and-check loop)
 1. `python3 scripts/lint_page.py --site <repo> <page>`: no errors; read every warning on the page you touched.
 2. `node scripts/shoot.mjs --site <repo> --out <dir> /<url>`: builds the site and screenshots the page at 1440 and 390 wide, and reports console errors, 404s, broken images, viewers that didn't load and sideways scroll on phone.
 3. `node scripts/layout_check.mjs --site <repo> /<url>`: opens the page at 390, 768, 1024, 1280, 1440 (also at 2x), 1680 and 1920 wide. It flags anything that runs past the window edge or is cut off by its container, sideways scroll, and grid or flex rows whose items start more than 80 px apart (a viewer high and drawings far down beside it). No lines allowed.
-4. `node scripts/theme_audit.mjs --site <repo>`: every page on the site, checked against the brand theme in the browser. No FAIL lines (see `references/check-loop.md`).
-5. Look at both screenshots against the brand, the page's neighbours on the site, and any reference the owner named. Write down everything that's off, fix it, shoot again. Repeat until nothing is on the list (`references/check-loop.md`).
-6. Only screenshots that passed go to the owner.
+4. Every 3D model with wood on the page: `python3 scripts/glb_grain_check.py model.glb` (decode meshopt first, see the script). Grain must run along every part. A web GLB exported from procedural grain has no real UVs, and an auto-unwrap lays the grain diagonally; fix with `scripts/glb_regrain.py`.
+5. `node scripts/theme_audit.mjs --site <repo>`: every page on the site, checked against the brand theme in the browser. No FAIL lines (see `references/check-loop.md`).
+6. Look at both screenshots against the brand, the page's neighbours on the site, and any reference the owner named. Write down everything that's off, fix it, shoot again. Repeat until nothing is on the list (`references/check-loop.md`).
+7. Only screenshots that passed go to the owner.
 
 ## PR and deploy
-Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (the owner's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute; check the live page at both widths once it's up and send the owner the link.
+Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (the owner's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute. Then run `node scripts/theme_audit.mjs --site <repo> --live https://alicanrowe.com /<url>`, which loads the published page cache-busted like a hard refresh. Check the live page at both widths, then send the owner the link. A page is done when the live audit passes, not when the branch does.
 
 ## Keep this skill improving
 When a site change goes wrong, or the owner corrects something on a page, write the lesson into the matching reference (and `references/lessons.md`, dated) in the same session, add a check to `scripts/lint_page.py` if a script could have caught it, then commit and push to this skill's repo. No private data: no emails, home paths, client names or unpublished prices.

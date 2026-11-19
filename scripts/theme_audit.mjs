@@ -7,6 +7,7 @@
 //
 //   node scripts/theme_audit.mjs --site /path/to/site-repo            # every page
 //   node scripts/theme_audit.mjs --site ... --json audit.json /dancers /moth # some pages, save raw data
+//   node scripts/theme_audit.mjs --site ... --live https://alicanrowe.com   # the published pages, cache-busted (hard refresh); run after every deploy
 //   options: --no-build
 //
 // Exit 1 if any page has a FAIL. Allowed exceptions live in ALLOW below, each with the reason.
@@ -24,10 +25,10 @@ const flag = k => { const i = a.indexOf(k); if (i < 0) return false; a.splice(i,
 const site = path.resolve(opt('--site', '.'));
 const jsonOut = opt('--json', '');
 const noBuild = flag('--no-build');
+const live = opt('--live', '');  // e.g. https://alicanrowe.com : audit the published site, cache-busted like a hard refresh
 
 // Known, approved exceptions: page url prefix -> what is allowed there and why.
 const ALLOW = {
-  '/moth': { fonts: ['Monsieur La Doulaise', 'Pinyon Script'], darkHeader: true, exempt: '.ds-dot,.ds-dot *', why: 'moth custom theme (night band, script title), approved for its own page; red numbered dots are drawing callouts' },
   '/fairy-ring': { exempt: '.lc-board,.lc-board *', why: 'drawn Quest app screens (dark boards, coloured buttons) are illustrations, not page chrome' },
 };
 
@@ -55,14 +56,15 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': types[path.extname(f).toLowerCase()] || 'application/octet-stream' });
   fs.createReadStream(f).pipe(res);
 }).listen(0);
-const base = `http://127.0.0.1:${server.address().port}`;
+const base = live ? live.replace(/\/$/, '') : `http://127.0.0.1:${server.address().port}`;
+const bust = live ? `?nocache=${Date.now()}` : '';
 
 const browser = await chromium.launch();
 const raw = {};
 for (const [name, w] of [['desktop', 1440], ['phone', 390]]) for (const pg of pages) {
-  const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
+  const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, extraHTTPHeaders: live ? { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } : {} });
   const page = await ctx.newPage();
-  await page.goto(base + (pg === '/' ? '/' : pg + '/'), { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
+  await page.goto(base + (pg === '/' ? '/' : pg + '/') + bust, { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
   await page.waitForTimeout(1200);
   const ex = Object.entries(ALLOW).find(([p]) => pg.startsWith(p))?.[1].exempt || '';
   raw[`${pg} ${name}`] = await page.evaluate((ex) => {
@@ -83,7 +85,7 @@ for (const [name, w] of [['desktop', 1440], ['phone', 390]]) for (const pg of pa
       const r = e.getBoundingClientRect(); if (!r.width && !r.height) continue;
       if (e.closest('iframe,[data-theme-exempt]') || (ex && e.matches(ex))) continue;
       if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
-        o.text.push({ el: d(e), fam: cs.fontFamily.split(',')[0].replace(/["']/g, '').trim(), w: cs.fontWeight,
+        o.text.push({ el: d(e), fam: cs.fontFamily.split(',')[0].replace(/["']/g, '').trim(), w: cs.fontWeight, fs: parseFloat(cs.fontSize),
           col: e instanceof SVGElement ? cs.fill : cs.color, bg: (() => { let x = e; while (x && x !== document.body) { const b = getComputedStyle(x).backgroundColor; if (b !== 'rgba(0, 0, 0, 0)') return b; x = x.parentElement; } return null; })() });
       const border = ['Top', 'Right', 'Bottom', 'Left'].filter(s => parseFloat(cs['border' + s + 'Width']) > 0 && cs['border' + s + 'Style'] !== 'none');
       o.boxes.push(...[
@@ -120,7 +122,9 @@ for (const [key, o] of Object.entries(raw)) {
   }
   for (const t of o.text) {
     if (!['Newsreader', 'IBM Plex Mono'].includes(t.fam) && !(allow.fonts || []).includes(t.fam)) add(pg, 'FAIL', `font ${t.fam}: ${t.el}`);
-    if (t.fam === 'Newsreader' && !['200', '300'].includes(t.w)) add(pg, 'WARN', `Newsreader ${t.w} asked for (renders the 300 cut, but set 200/300): ${t.el}`);
+    if (t.fam === 'Newsreader' && !['200', '300'].includes(t.w)) add(pg, 'WARN', `Newsreader ${t.w} asked for (only the 200/300 cuts load, so it draws 300; set 200/300): ${t.el}`);
+    // SVG text sizes are in drawing units, so SVG labels are skipped
+    if (t.fam === 'IBM Plex Mono' && t.fs > 12.5 && !/^(text|tspan)/.test(t.el)) add(pg, 'FAIL', `Plex Mono at ${t.fs}px (brand: mono only for small credits, numbers and dimensions; body text is Newsreader): ${t.el}`);
     const drawingRed = t.col === 'rgb(150, 40, 28)' && /^(text|tspan)/.test(t.el);  // dimension red on SVG drawings
     if (!okInk(t.col) && !drawingRed && !(allow.darkHeader && /^a\b/.test(t.el) && /^rgba?\(255, 2[45]\d/.test(t.col))) add(pg, 'FAIL', `text colour ${t.col} (brand: grey ink, nav mauve): ${t.el}`);
     if (t.bg && !okBg(t.bg) && !(allow.darkHeader && /^(a|header)/.test(t.el))) add(pg, 'FAIL', `text on a coloured plate ${t.bg}: ${t.el}`);

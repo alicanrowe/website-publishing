@@ -66,15 +66,18 @@ for (const p of pages) {
         if (b.width < 2 || b.height < 2) continue;
         const cs = getComputedStyle(e); if (cs.visibility === 'hidden' || cs.position === 'fixed') continue;
         if (e.closest('[aria-hidden="true"]') || cs.pointerEvents === 'none') continue; // decorative backdrops may bleed on purpose
-        if (b.right > W + 1 || b.left < -1) { out.push(`CLIP ${label(e)} spans ${Math.round(b.left)}..${Math.round(b.right)} in a ${W}px window`); continue; }
+        // the nearest ancestor that crops sideways (overflow hidden/clip)
+        let crop = null;
         for (let anc = e.parentElement; anc && anc !== document.body; anc = anc.parentElement) {
           const s = getComputedStyle(anc);
-          if (/(hidden|clip)/.test(s.overflowX) && !/(scroll|auto)/.test(s.overflowX)) {
-            const ab = anc.getBoundingClientRect();
-            if (b.right > ab.right + 2 || b.left < ab.left - 2) out.push(`CLIP ${label(e)} is cut off by ${name(anc)}`);
-            break;
-          }
+          if (/(hidden|clip)/.test(s.overflowX) && !/(scroll|auto)/.test(s.overflowX)) { crop = anc; break; }
         }
+        const cb = crop ? crop.getBoundingClientRect() : null;
+        const visL = cb ? Math.max(b.left, cb.left) : b.left, visR = cb ? Math.min(b.right, cb.right) : b.right;
+        if (visR > W + 1 || visL < -1) { out.push(`CLIP ${label(e)} spans ${Math.round(visL)}..${Math.round(visR)} in a ${W}px window`); continue; }
+        // a photo cropped by its frame (cover, slow zoom) is fine; text cut by its box is not
+        const isText = /^(P|H1|H2|H3|LI|DT|DD|TD|TH|FIGCAPTION|TABLE)$/.test(e.tagName);
+        if (isText && cb && (b.right > cb.right + 2 || b.left < cb.left - 2)) out.push(`CLIP ${label(e)} is cut off by ${name(crop)}`);
       }
       for (const g of document.querySelectorAll('main *, .ds *')) {
         const d = getComputedStyle(g).display;

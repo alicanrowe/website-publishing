@@ -3,6 +3,9 @@
 Dated, newest first. Each lesson is also written into the reference it belongs to.
 
 ## 2026-11-19
+- **Moth is raw white ash until the final finish (alican).** The web GLBs (v6w, v7c) carried a near-black ash texture, so the home hero and cards showed a black case while the text said raw white ash. `scripts/glb_recolor_texture.py` swaps a material's base-colour texture for a recoloured copy that keeps the grain. Check a model's colours against the page text before publishing it.
+
+## 2026-11-19
 - **"Outdated" pages that pass the audit.** the robot project and Info passed `theme_audit.mjs` (right fonts, inks, no plates) but still looked old next to Nine Rests: centred layout, grey tracked caps subtitles, boxed cards, a ruled stats band. The audit checks the brand tokens, not the layout, so the check loop now also compares every reworked page side by side with Nine Rests (brand-on-the-web.md, "The current page look"). Pages sharing a template are restyled once through a shared stylesheet loaded last (`assets/lc-sheet.css`) rather than by patching each page's own overrides.
 
 ## 2026-11-18

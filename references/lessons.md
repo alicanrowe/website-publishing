@@ -2,6 +2,9 @@
 
 Dated, newest first. Each lesson is also written into the reference it belongs to.
 
+## 2026-11-19
+- **"Outdated" pages that pass the audit.** Fairy Ring and Info passed `theme_audit.mjs` (right fonts, inks, no plates) but still looked old next to Nine Rests: centred layout, grey tracked caps subtitles, boxed cards, a ruled stats band. The audit checks the brand tokens, not the layout, so the check loop now also compares every reworked page side by side with Nine Rests (brand-on-the-web.md, "The current page look"). Pages sharing a template are restyled once through a shared stylesheet loaded last (`assets/lc-sheet.css`) rather than by patching each page's own overrides.
+
 ## 2026-11-18
 - **Latest version everywhere (alican's rule).** The Moth page moved to v6w (with the drawer stand) but the home hero still loaded v6s. `version_check.py` now flags any page using an older version of a file than its folder holds.
 - **A bench can be sculpture.** Asked for "sculpture only" on the Sculpture page, I moved the Studio Shrine Bench to Furniture because it's a bench; alican moved it straight back: carved pieces are sculpture even when usable. Don't sort by function; ask before moving a piece between sections.

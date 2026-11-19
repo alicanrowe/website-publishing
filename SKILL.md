@@ -16,7 +16,7 @@ The site is plain files: Markdown notes in `content/`, built to static HTML by `
 4. Screenshot the page as it is now (`--prefix before-`), so you have something to compare against.
 
 ## Standing rule: on theme and up to date (the owner)
-The whole site stays on the brand theme, and every project page matches the latest version of that project: renders, 3D previews, specs, drawings and animations. When a project gets a new version anywhere (CAD, renders, a GLB in the project's files), the site's page, its home and category cards, and its 3D tile move to it in the same session. Before any site PR, run `theme_audit.mjs` on the whole site (no FAILs), `scripts/version_check.py` (a page using an older file than the repo already holds) and `scripts/source_check.py --projects <project files>` (a page whose source files in the project changed after the page's last commit: renders, buy lists, guides, firmware notes). `version_check` alone can't see a project that moved on outside the repo. Every page built from project files has an entry in the repo's `tools/sources.json`; add one when you build a page, and when a project gets a new pass (an audit, a redesign), rebuild every part of its page from the new outputs, not just the images.
+The whole site stays on the brand theme, and every project page matches the latest version of that project: renders, 3D previews, specs, drawings and animations. When a project gets a new version anywhere (CAD, renders, a GLB in the project's files), the site's page, its home and category cards, and its 3D tile move to it in the same session. Before any site PR, run `theme_audit.mjs` on the whole site (no FAILs), `scripts/version_check.py` (a page using an older file than the repo already holds, and STALE: a still, PDF or video whose version is older than the 3D model on the same page, e.g. a v6 render beside a v7c GLB) and `scripts/source_check.py --projects <project files>` (a page whose source files in the project changed after the page's last commit: renders, buy lists, guides, firmware notes). `version_check` alone can't see a project that moved on outside the repo. Every page built from project files has an entry in the repo's `tools/sources.json`; add one when you build a page, and when a project gets a new pass (an audit, a redesign), rebuild every part of its page from the new outputs, not just the images.
 
 ## Making the change
 - New project page: follow `references/adding-a-page.md` and start from `templates/project-page.md`.
@@ -30,14 +30,16 @@ The whole site stays on the brand theme, and every project page matches the late
 - Retired: Wood Lenses (removed 2026-11-18 at the owner's request; `/wood-lenses` redirects to `/robotics`; backup in the project files and git history). Don't bring it back unless the owner asks.
 - No outside artists' names or inspiration credits on public pages. Credit only the maker of a photo or product that appears on the page.
 - Renders for the site run on cloud machines (this session, RenderBeamer, GarageFarm), never on the owner's Mac; the Mac is only for downloads and moving files.
+- When a project moves to a new version, every still on its page is re-rendered from the new model or taken down the same day. An old render stays up only in a section that says it's history (iterations, prototypes). Removed features go with their renders and captions (the Moth tool box, the stainless sheets).
 - Only show finished work: final renders and site stills go up once the design is locked. A page about something unbuilt says so at the top.
 
 ## Check before the PR (make-and-check loop)
 1. `python3 scripts/lint_page.py --site <repo> <page>`: no errors; read every warning on the page you touched.
 2. `node scripts/shoot.mjs --site <repo> --out <dir> /<url>`: builds the site and screenshots the page at 1440 and 390 wide, and reports console errors, 404s, broken images, viewers that didn't load and sideways scroll on phone.
-3. `node scripts/theme_audit.mjs --site <repo>`: every page on the site, checked against the brand theme in the browser. No FAIL lines (see `references/check-loop.md`).
-4. Look at both screenshots against the brand, the page's neighbours on the site, and any reference the owner named. Write down everything that's off, fix it, shoot again. Repeat until nothing is on the list (`references/check-loop.md`).
-5. Only screenshots that passed go to the owner.
+3. `node scripts/layout_check.mjs --site <repo> /<url>`: opens the page at 390, 768, 1024, 1280, 1440 (also at 2x), 1680 and 1920 wide. It flags anything that runs past the window edge or is cut off by its container, sideways scroll, and grid or flex rows whose items start more than 80 px apart (a viewer high and drawings far down beside it). No lines allowed.
+4. `node scripts/theme_audit.mjs --site <repo>`: every page on the site, checked against the brand theme in the browser. No FAIL lines (see `references/check-loop.md`).
+5. Look at both screenshots against the brand, the page's neighbours on the site, and any reference the owner named. Write down everything that's off, fix it, shoot again. Repeat until nothing is on the list (`references/check-loop.md`).
+6. Only screenshots that passed go to the owner.
 
 ## PR and deploy
 Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (the owner's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute; check the live page at both widths once it's up and send the owner the link.

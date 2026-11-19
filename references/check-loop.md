@@ -30,12 +30,18 @@ node scripts/theme_audit.mjs --site <repo>
 ```
 Builds the site and opens **every** page at 1440 and 390, reads what the browser actually draws (computed styles, not the source) and flags: fonts other than Newsreader / Plex Mono, Newsreader asked for at 400+, text colours outside the grey inks and nav colours, text on coloured plates, a page background that isn't white, boxes with a border all round, rounded corners, shadows and gradients, and any page whose header (nav labels, order, logo position, nav size and colour, bar colour) differs from the rest. Run it for every PR, not just the page you touched: a change to `site.css`, `site.json` or the home page's own header reaches pages you never opened. A FAIL is fixed before the PR, or added to `ALLOW` in the script with the reason once it is approved (the moth custom theme, drawn app screens). Exit code 1 means a FAIL.
 
+## 3b2. Layout at every width
+```
+node scripts/layout_check.mjs --site <repo> /page        # or --all
+```
+Window widths 390, 768, 1024, 1280, 1440 (and 1440 at 2x), 1680, 1920. Flags CLIP (an element past the window edge, or cut off by an ancestor with overflow hidden), SCROLL (sideways scroll) and ALIGN (items of one grid or flex row starting more than 80 px and 20% of the row apart). Decorative backdrops marked aria-hidden are skipped. A 3D viewer next to drawings and a spec column is the classic ALIGN failure: align the row to the top and give the viewer the drawings' height, and put long spec lists in their own full-width row.
+
 ## 3c. Latest version everywhere
 ```
 python3 scripts/version_check.py --site <repo>
 python3 scripts/source_check.py --site <repo> --projects <project files root>   # pages older than their project sources (tools/sources.json)
 ```
-Lists every page that uses a model or render when the same folder holds a later version of it (v6s next to v6w, r9 next to r10). the owner's rule: every page, card and 3D tile shows the latest version of its project. Also compare the project's own files (CAD, renders, GLBs in the project folder) with what the site holds; a newer version there means the site gets it in the same session.
+Lists every page that uses a model or render when the same folder holds a later version of it (v6s next to v6w, r9 next to r10), and every STALE still, PDF or video whose version token is older than the newest GLB of the same project on that page (moth-v6pa-*.jpg beside moth-case-v7c-lite.glb). Intentional history (iteration option labels, drawings confirmed current) goes in the script's ALLOW list with the reason. the owner's rule: every page, card and 3D tile shows the latest version of its project. Also compare the project's own files (CAD, renders, GLBs in the project folder) with what the site holds; a newer version there means the site gets it in the same session.
 
 ## 4. Fix and repeat
 Fix the list, shoot again, look again. Repeat until a pass finds nothing. Then check one level wider: the index page that links to it, and the home page if it changed.

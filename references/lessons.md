@@ -37,3 +37,6 @@ The Moth source GLB has no UVs (its grain was procedural). The web "lite" GLB go
 ## 2026-11-19: Moth page still on its old custom theme
 theme_audit had a standing ALLOW for /moth (script fonts, dark header), added when the moth theme was approved on 12 Nov. When the owner moved on, the exemption hid every difference, and the audit only ran on the branch, never on the live site. Fixes: removed the exemption; the audit now fails Plex Mono above 12.5px in HTML text; `--live` audits the published site with cache-busting (hard refresh) after each deploy; SKILL.md says there are no per-page themes. The same audit still flags the large mono tables on Dancers and Fairy Ring for their owners.
 
+## 2026-11-19: Nine Rests carved images showed stale for hours
+The new images replaced old files under the same names, and browsers kept the cached copies (up to 4 hours). Only site.css and site.js were cache-busted. build.py now content-hashes every local media URL (`?v=<hash>`), so a changed file always gets a new URL.
+

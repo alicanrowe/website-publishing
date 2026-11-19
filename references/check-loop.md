@@ -39,9 +39,20 @@ Window widths 390, 768, 1024, 1280, 1440 (and 1440 at 2x), 1680, 1920. Flags CLI
 ## 3c. Latest version everywhere
 ```
 python3 scripts/version_check.py --site <repo>
-python3 scripts/source_check.py --site <repo> --projects <project files root>   # pages older than their project sources (tools/sources.json)
+python3 scripts/source_check.py --site <repo> --projects <project files root> --write-lock   # pages older than their project sources, and files older than the newest model version (tools/sources.json); refreshes tools/versions.lock.json for the build gate
 ```
 Lists every page that uses a model or render when the same folder holds a later version of it (v6s next to v6w, r9 next to r10), and every STALE still, PDF or video whose version token is older than the newest GLB of the same project on that page (moth-v6pa-*.jpg beside moth-case-v7c-lite.glb). Intentional history (iteration option labels, drawings confirmed current) goes in the script's ALLOW list with the reason. the owner's rule: every page, card and 3D tile shows the latest version of its project. Also compare the project's own files (CAD, renders, GLBs in the project folder) with what the site holds; a newer version there means the site gets it in the same session.
+
+Version lines in `tools/sources.json` (per page): `{"line": "case", "model": "<glob of the full models in the project files>", "match": "<regex for the site files that follow it>"}`. The newest version token the glob finds (v7e > v7d > v7 > v6s) is "current". A glob that finds nothing fails too. The build gate (`version_gate()` in the site's build.py) checks every page against every line, so home cards and category tiles are held to the same version as the project page.
+
+## 3d. Wood and flicker on 3D models
+```
+python3 scripts/glb_grain_check.py model.glb        # UVs: grain along every part
+python3 scripts/glb_texture_check.py model.glb      # the texture itself: straight grain along U, not flat-sawn figure
+blender -b -P scripts/glb_zfight_check.py -- model.glb   # coincident surfaces of different materials (flicker)
+blender -b -P scripts/glb_zfight_fix.py -- in.glb out.glb # delete covered faces, sink partly covered ones
+```
+Then look at the model in the viewer up close from three sides: numbers alone passed a swirly texture once.
 
 ## 4. Fix and repeat
 Fix the list, shoot again, look again. Repeat until a pass finds nothing. Then check one level wider: the index page that links to it, and the home page if it changed.

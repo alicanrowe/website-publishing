@@ -31,3 +31,14 @@ H.264 MP4, 1080p at most, about 15 MB or less, no audio track unless it's needed
 - If any step rewrites the GLB with trimesh, put the material extensions back afterwards (transmission, ior, emissive strength; see lessons.md, 2026-11-19), or glass and clear plastic go opaque. Without gltfpack, `gltf-transform optimize in.glb out.glb --compress meshopt --texture-compress webp --texture-size 2048` gives the same result.
 - Y up, metres, the model's base on the ground at the origin, so `data-orbit` defaults frame it well.
 - Name them `<piece>-v<N>-lite.glb` and point the page at the new file; don't overwrite a file a live page uses.
+
+## Embedded posts (Instagram, and any embed that sets its own width)
+A set of embeds stays on one row, never 3 + 1. Instagram's `embed.js` swaps each blockquote for an iframe with a 326 px minimum width, so a flex row wraps. Use a grid and override the embed's own widths:
+```html
+<style>.k-reels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;max-width:1400px;margin:10px auto 34px;align-items:start}
+.k-reels>blockquote,.k-reels>iframe{min-width:0!important;max-width:none!important;width:100%!important;margin:0!important}
+@media (max-width:900px){.k-reels{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(78%,326px);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.k-reels>*{scroll-snap-align:start}}</style>
+<div class="k-reels"><blockquote class="instagram-media" data-instgrm-permalink="..." data-instgrm-version="14" style="background:#fff;border:0;margin:0;padding:0;width:100%">...</blockquote>...</div>
+```
+Check it: every iframe in the row has the same top at 1440, and at 390 the row scrolls sideways without the page scrolling sideways.
+

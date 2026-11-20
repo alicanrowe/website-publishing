@@ -58,6 +58,14 @@ ALLOW = [
     (r'/moth/w/ds-it-v\d-', 'Design iteration variants V1..V8 on the Moth page: option labels, not versions'),
     (r'files/moth/Moth_(full_size_[a-z0-9_]+|parts_full_size|joinery_and_assemblies)_v6s', 'case drawings still current for v7c (Moth build thread, 19 Nov 2026); replace when the stand drawings are redone'),
 ]
+# Allow lists in the site's tools/sources.json (the build gate's exceptions) count here too, so an exception is written once.
+try:
+    import json as _json
+    _src = _json.load(open(os.path.join(os.path.dirname(CONTENT.rstrip('/')), 'tools', 'sources.json')))
+    for _pg in _src.get('pages', {}).values():
+        ALLOW += [(a['pattern'], a.get('reason', '')) for a in _pg.get('allow', [])]
+except (OSError, ValueError):
+    pass
 TOK = re.compile(r'(?<![a-z0-9])v(\d+)([a-z]*)', re.I)
 def tok(name):
     m = TOK.search(name)

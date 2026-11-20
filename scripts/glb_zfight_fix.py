@@ -9,15 +9,19 @@ surface of another mesh with a different material, with normals agreeing (dot > 
 deleted: the other surface already covers that spot, so nothing visible is lost and the two
 can no longer fight for the same pixels. Meshes are processed in order and the tree is rebuilt
 after each, so of two coincident surfaces only one loses its faces.
-  blender -b -P glb_zfight_fix.py -- in.glb out.glb [eps metres]
+  blender -b -P glb_zfight_fix.py -- in.glb out.glb [eps metres] [--skip REGEX] [--delete]
+Each mesh uses at most 0.2% of its own size as tolerance, so small parts in a big model aren't crushed.
 Run glb_zfight_check.py afterwards and look at the model: a partly covered face is kept.
 """
 import sys as _s
 if '--' in _s.argv: _s.argv=[_s.argv[0]]+_s.argv[_s.argv.index('--')+1:]
-import bpy,bmesh,sys,mathutils
+import bpy,bmesh,sys,mathutils,re
 from mathutils.bvhtree import BVHTree
 DELETE='--delete' in sys.argv
 sys.argv=[x for x in sys.argv if x!='--delete']
+SKIP=None
+if '--skip' in sys.argv:   # --skip REGEX: never move these meshes (they still count as covering surfaces)
+    i=sys.argv.index('--skip'); SKIP=re.compile(sys.argv[i+1]); del sys.argv[i:i+2]
 src,dst=sys.argv[1],sys.argv[2]
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=src)
@@ -34,8 +38,13 @@ trees={}
 def tree(o):
     bm=world_bm(o); t=BVHTree.FromBMesh(bm); bb=(mathutils.Vector(map(min,*[v.co for v in bm.verts])),mathutils.Vector(map(max,*[v.co for v in bm.verts]))); bm.free(); return t,bb
 for o in objs: trees[o.name]=tree(o)
+# a small part gets a small tolerance: the model-wide EPS is about 0.4 mm on a 2 m case, which moved
+# 20 mm tool parts by over 1 mm (crushed). Each mesh uses at most 0.2% of its own size.
+def eps_of(o):
+    a,b=trees[o.name][1]; return min(EPS,(b-a).length*0.002)
 total=0
 for o in objs:
+    if SKIP and SKIP.search(o.name): continue
     others=[p for p in objs if p is not o and mats(p)!=mats(o)]
     bm=world_bm(o)  # triangulated, world space; indices match the triangulated mesh we write back
     _,bb=trees[o.name]
@@ -65,6 +74,8 @@ print(f'eps {EPS*1000:.3f} mm, {total} covered face(s) removed')
 # (facing the same way) inward by 3*EPS, so the covering surface always wins the depth test.
 moved=0
 for o in objs:
+    if SKIP and SKIP.search(o.name): continue
+    e=eps_of(o)
     others=[p for p in objs if p is not o and mats(p)!=mats(o)]
     _,bb=trees[o.name]
     near=[p for p in others if not any(bb[0][k]>trees[p.name][1][1][k]+EPS or trees[p.name][1][0][k]>bb[1][k]+EPS for k in range(3))]
@@ -75,9 +86,9 @@ for o in objs:
     for v in me.vertices:
         w=mw@v.co; nw=(nmw@v.normal).normalized()
         for p in near:
-            h=trees[p.name][0].find_nearest(w,EPS)
+            h=trees[p.name][0].find_nearest(w,e)
             if h[0] is not None and nw.dot(h[1])>0.8:
-                v.co=inv@(w-nw*3*EPS); n+=1; break
+                v.co=inv@(w-nw*3*e); n+=1; break
     if n:
         me.update(); trees[o.name]=tree(o); moved+=n
         print(f'{o.name}: sank {n} vertex(es)')

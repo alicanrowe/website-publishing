@@ -21,6 +21,7 @@ The whole site stays on the brand theme, and every project page matches the late
 ## Making the change
 - New project page: follow `references/adding-a-page.md` and start from `templates/project-page.md`.
 - A piece with a model: render, 3D viewer and dimension drawing sit inline, side by side, with the spec table under them (`references/inline-layout.md`). Never put the viewer and its drawing in separate sections.
+- No static angle or orthographic strips (view 1/2/3, front/side/top rows) of a piece that already has a turning 3D viewer on the page: the viewer shows every angle, so the strip is clutter. Stills next to a viewer earn their place only as variant buttons (seasons, stones) or a render of something the viewer can't show. `lint_page.py` errors on `-angleN`/`-viewN`/`-ortho` stills beside a viewer.
 - Images, video and GLBs: size and compress them before committing (`references/media.md`). Full-size originals stay outside the repo.
 - Someone else's image (a maker's product photo, a reference): their largest original, credited and linked in a mono caption under it.
 - Show each project once per page: nothing in a grid that is already in the hero or a band above it.

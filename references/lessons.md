@@ -52,3 +52,6 @@ The new images replaced old files under the same names, and browsers kept the ca
 
 ## 20 Nov 2026: milky gemstones in the renders
 The Moth lancet drops rendered milky white: the model's gem materials were near-white "clear glass" tints and four stones had no material, and my render rig passed gems through untouched because the spec maps them to `gem` with colours, not a swatch. The rig now sets every part named after a stone (garnet, aquamarine, amethyst) to its spec colour, and the scene is saved and checked with the project's gem colour check (all 48 stones) before rendering. Before deploying stills of a piece with stones, look at a close crop of a stone: a full-frame still hides it.
+
+## 20 Nov 2026: no angle strips beside a 3D viewer
+Mothbone showed, under each ring and the cuff, a row of three static "view 1/2/3" stills of the spring model, right under a viewer that turns the same model. The owner: "i think these views are redundant and can be removed". They're gone (12 images), the rule is in SKILL.md and inline-layout.md, and `lint_page.py` now errors on `-angleN`, `-viewN` or `-ortho` stills on a page with an `.ar3d` viewer.

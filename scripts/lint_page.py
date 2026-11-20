@@ -204,6 +204,13 @@ for f in targets:
     if 'class="ar3d' in body and '/assets/viewer.js' not in body:
         say('ERROR', f, '3D viewer (.ar3d) but no <script src="/assets/viewer.js" defer>')
 
+    # a piece with a turning 3D model needs no static angle strip: rows of stills named angle1/2/3,
+    # view1/2/3 or ortho next to an .ar3d viewer repeat what the viewer already shows (the owner, 2026-11-20)
+    if 'class="ar3d' in body:
+        stills = re.findall(r'<img\b[^>]*src="([^"]*?[-_](?:angle|view|ortho)[-_]?\d*\.(?:jpe?g|png|webp|avif))"', body, re.I)
+        if stills:
+            say('ERROR', f, f'{len(stills)} static angle/orthographic still(s) (e.g. {stills[0]}) on a page with a 3D viewer; drop them, the viewer shows every angle')
+
     css = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', body, re.S))
     css_nomedia = re.sub(r'@media[^{]*\{', '', css)
     sel = collections.Counter()

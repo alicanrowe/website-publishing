@@ -33,3 +33,11 @@ Read it off the current cut list or model, never from memory. Typical rows: over
 
 ## Before publishing
 Compare the three against each other and the model: same parts, same proportions, same version. A viewer that still shows removed parts is the most common miss. Furniture pieces also follow the CAD skill's own checks first (hardwood-furniture-cad: model checked and design locked before final renders).
+
+## Variant images as viewer buttons (seasons, stones, finishes)
+When a piece comes in variants (the jewelry line's four seasons) and the page shows one still per variant beside the 3D viewer, the stills are the switch: clicking one loads that variant in the viewer.
+- Wrap each still in `<figure class="mb-fig"><button type="button" class="mb-pick" data-pick="<viewer id>" data-src="<variant glb>" data-name="<Piece, variant>" aria-pressed="true|false" aria-label="Show <Piece, variant> in 3D"><img … alt=""><span class="mb-cap">Variant</span></button></figure>`. `viewer.js` already handles any `[data-pick]` element, so no new script for the swap; the image's alt is empty because the button's label names it.
+- Keep the short word list under the viewer too (`.ar3d-pick`): on a phone the stills stack below the viewer. `viewer.js` presses every control for the same viewer that has the same `data-src`, so the words and the stills stay in step.
+- Active state on brand: no boxes, borders or fills. The active still is full strength with its caption underlined (.5px, 3px offset); the others sit at 50% opacity (60% on touch screens), fading in over .6s on hover. A .5px outline shows only on `:focus-visible` for keyboard users.
+- A tap on a still whose viewer is off screen scrolls the viewer back into view (smooth, or instant under reduced motion); it's a small inline script on the page.
+- Check: click, Tab+Enter, Space and a phone tap each change the viewer's model and caption and press the matching word and still.

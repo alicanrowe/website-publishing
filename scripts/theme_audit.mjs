@@ -7,7 +7,7 @@
 //
 //   node scripts/theme_audit.mjs --site /path/to/site-repo            # every page
 //   node scripts/theme_audit.mjs --site ... --json audit.json /dancers /moth # some pages, save raw data
-//   node scripts/theme_audit.mjs --site ... --live https://alicanrowe.com   # the published pages, cache-busted (hard refresh); run after every deploy
+//   node scripts/theme_audit.mjs --site ... --live https://the owner's site   # the published pages, cache-busted (hard refresh); run after every deploy
 //   options: --no-build
 //
 // Exit 1 if any page has a FAIL. Allowed exceptions live in ALLOW below, each with the reason.
@@ -25,7 +25,7 @@ const flag = k => { const i = a.indexOf(k); if (i < 0) return false; a.splice(i,
 const site = path.resolve(opt('--site', '.'));
 const jsonOut = opt('--json', '');
 const noBuild = flag('--no-build');
-const live = opt('--live', '');  // e.g. https://alicanrowe.com : audit the published site, cache-busted like a hard refresh
+const live = opt('--live', '');  // e.g. https://the owner's site : audit the published site, cache-busted like a hard refresh
 
 // Known, approved exceptions: page url prefix -> what is allowed there and why.
 const ALLOW = {

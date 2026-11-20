@@ -19,6 +19,10 @@ Flags (exit 1 if any ERROR):
   ERROR  the same project shown twice on one page (two tiles, bands or heroes in different
          sections linking to the same page; anchors like /nine-rests#rest count as /nine-rests)
   WARN   brand slips: font-weight 400+ on Newsreader text, Jost, pure #000 body text, rounded corners, box shadows
+  ERROR  (site-wide, every run) a home page section and its category page disagree: a piece on the
+         category page (e.g. /sculpture) that the home page doesn't show anywhere (its section, the
+         hero or a band), or pieces in the home section in a different order from the category page
+  WARN   (site-wide) a piece in a home section that its category page doesn't list
 """
 import argparse, os, re, sys, json, collections
 
@@ -57,6 +61,49 @@ for n in json.load(open(os.path.join(SITE, 'site.json'))).get('nav', []):
     if n.get('url', '').rstrip('/') == '':
         print(f"ERROR site.json: nav item '{n.get('label')}' links to the home page; give it its own page")
         errors_site = True
+
+# site-wide: each home page section lists the same pieces, in the same order, as its category page
+# (the jewelry line was on /sculpture but missing from the home Sculpture row, 2026-11-20)
+def proj(ref):
+    ref = ref.split('?')[0].split('#')[0].rstrip('/')
+    return ref if ref.startswith('/') and ref.count('/') == 1 and ref else None
+
+home_note = next((f for f in notes if (fm(open(os.path.join(CONTENT, f), encoding='utf-8').read())[0].get('url') or '').rstrip('/') == ''), None)
+by_url = {}
+for f in notes:
+    m, b = fm(open(os.path.join(CONTENT, f), encoding='utf-8').read())
+    by_url[(m.get('url') or '/' + f[:-3]).rstrip('/')] = (f, b)
+if home_note:
+    home = by_url[''][1]
+    home = re.sub(r'<nav\b.*?</nav>', '', home, flags=re.S)
+    everywhere = {proj(r) for r in re.findall(r'(?:href|data-href)="([^"]+)"', home)} - {None}
+    secs = list(re.finditer(r'<div class="sec"[^>]*>\s*<a[^>]*href="([^"]+)"', home))
+    for i, sm in enumerate(secs):
+        cat = proj(sm.group(1))
+        if cat not in by_url: continue
+        chunk = home[sm.end(): secs[i + 1].start() if i + 1 < len(secs) else len(home)]
+        row = []
+        for r in re.findall(r'(?:href|data-href)="([^"]+)"', chunk):
+            p = proj(r)
+            if p and p != cat and p not in row: row.append(p)
+        cf, cb = by_url[cat]
+        tab = []
+        for r in re.findall(r'class="ar-(?:card|cap)" href="([^"]+)"', cb):
+            p = proj(r)
+            if p and p != cat and p not in tab: tab.append(p)
+        if not tab: continue
+        for p in tab:
+            if p not in everywhere:
+                print(f"ERROR home.md: {p} is on {cat} ({cf}) but not on the home page; add it to the {cat} section in the same place")
+                errors_site = True
+        for p in row:
+            if p not in tab:
+                print(f"WARN  home.md: {p} is in the home {cat} section but not on {cat} ({cf})")
+        shared = [p for p in row if p in tab]
+        want = [p for p in tab if p in shared]
+        if shared != want:
+            print(f"ERROR home.md: home {cat} section order {' , '.join(shared)} differs from {cf}: {' , '.join(want)}")
+            errors_site = True
 
 targets = notes if A.all else [p if p.endswith('.md') else p + '.md' for p in A.pages]
 if not targets:

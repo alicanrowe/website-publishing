@@ -55,6 +55,23 @@ blender -b -P scripts/glb_fidelity_check.py -- full.glb web.glb   # every part o
 ```
 Then look at the model in the viewer up close from three sides: numbers alone passed a swirly texture once.
 
+## 3e. Flicker, rendered (every 3D model, every time)
+```
+node scripts/flicker_render_check.mjs --site <repo> --page /robotics          # every viewer on a built page, in model-viewer
+node scripts/flicker_render_check.mjs --site <repo> --home fairy-ring          # the home page's own three.js tile for that model
+node scripts/flicker_render_check.mjs --site <repo> model.glb --orbit "30deg 72deg 3.8m" --target "0.24m 0.72m -0.12m"
+node scripts/glb_coplanar_check.mjs full.glb 0.0008 60                          # which parts touch, on the full model
+```
+The render check needs `npm i pngjs` (and the gltf-transform packages for the coplanar check) in the folder you run from.
+How it judges: 5 frames 0.02 degrees apart at each heading. Real motion moves an edge about 0.05 px a frame, so a pixel that jumps by a sixth of full scale and back is depth fighting. Patches over 40 px fail (`--cluster`); scattered 1 to 5 px specks are sub-pixel edge aliasing and pass. Calibration: the robot project v3 310 to 700 px patches; fixed v4 under 40; PM case 4; K mold 2.
+
+Fixing what it finds, in the full model (node names intact), never in the gltfpack output:
+- Screens, glass, legends, LEDs, engraving: lift them off the body along their face normal. Screens 3 mm, glass 1.5 mm, small decals 0.5 to 0.8 mm. Pick the direction away from the body's centre, and check it (one LCD went under its bezel the first time).
+- Bolted-on parts (hoods, rails on a skin): move the whole part 0.6 mm off the face, one vector for the whole part, or its faces split apart.
+- Internal panels flush with the skin (a plywood floor, a gasket, an extrusion frame against a skin with holes in it): clamp them 0.5 to 2 mm inside the case. A double-sided skin's inner face fights a frame behind it wherever a hole or handle lets you see in.
+- Don't leave a hairline gap where you inset: sink the part into its neighbour instead (a gasket lifted 0.5 mm left a sliver of grey frame showing that shimmered).
+- Then compress without simplifying: `gltfpack -cc` (positions quantized at the default is fine once parts are 0.4 mm or more apart). `-si ... -sa` brought flicker back on the rear panels and dropped the lid rails on the robot project. `references/fairy-ring-flicker-fix-example.mjs` is the script that did all of the above for the the robot project rig.
+
 ## 4. Fix and repeat
 Fix the list, shoot again, look again. Repeat until a pass finds nothing. Then check one level wider: the index page that links to it, and the home page if it changed.
 

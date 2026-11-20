@@ -17,7 +17,7 @@ Flags (exit 1 if any ERROR):
   WARN   the same CSS selector defined 3+ times in the page (patch the rule, don't stack overrides)
   WARN   style rules in the page that don't start with a page prefix (they can leak into other pages)
   ERROR  the same project shown twice on one page (two tiles, bands or heroes in different
-         sections linking to the same page; anchors like /nine-rests#rest count as /nine-rests)
+         sections linking to the same page; anchors like /nine-lives#rest count as /nine-lives)
   WARN   brand slips: font-weight 400+ on Newsreader text, Jost, pure #000 body text, rounded corners, box shadows
   ERROR  (site-wide, every run) a home page section and its category page disagree: a piece on the
          category page (e.g. /sculpture) that the home page doesn't show anywhere (its section, the

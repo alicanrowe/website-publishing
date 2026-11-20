@@ -8,7 +8,7 @@
 //   ALIGN  items of one grid or flex row whose tops differ by more than 80 px and 20% of the row's height
 //          (a 3D viewer sitting high while the drawings beside it start far down, as on the Moth stand)
 //
-//   node scripts/layout_check.mjs --site <repo> /moth /nine-rests
+//   node scripts/layout_check.mjs --site <repo> /moth /nine-lives
 //   node scripts/layout_check.mjs --site <repo> --all          every page in the built site
 // Exit code 1 when anything is flagged. Run it for every page you touch, before the PR.
 import { createRequire } from 'node:module';

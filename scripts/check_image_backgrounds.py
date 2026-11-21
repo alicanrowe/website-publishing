@@ -77,7 +77,10 @@ def main(argv):
         i += 1
     fails = 0
     for f in files:
-        st, msg = check(f, opaque)
+        try:
+            st, msg = check(f, opaque)
+        except Exception as e:
+            st, msg = "FAIL", f"not a readable image ({e.__class__.__name__}): a 404 page or broken download?"
         if st == "FAIL" and any(s in f.name for s in allow): st, msg = "OK", msg + " (allowed: asked for)"
         fails += st == "FAIL"
         if st != "OK" or len(files) <= 40: print(f"  {st:4s}  {f}: {msg}")

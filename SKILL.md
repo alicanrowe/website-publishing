@@ -56,6 +56,16 @@ Open a PR from your branch with before/after screenshots at both widths, then fo
 ## Project registry
 When you publish or update a project's page, update that project's row in the project registry (`PROJECTS.md` next to the eta-estimating live data): status, the live URL, and what's next. If the project has no row, add one. That way "where is X" questions find the page.
 
+## Excuses that don't count
+Each of these is a shortcut that ends in a broken result. If you catch yourself thinking the left column, do the right column.
+
+| The excuse | What to do instead |
+|---|---|
+| "It looks fine on desktop" | Shoot it at both widths and run layout_check at every width before the PR. |
+| "The old render is close enough" | Run version_check and source_check; a stale file on the page fails. |
+| "Merged means it's live" | Run the live audit on the published page; it's done when that passes. |
+| "While I'm in here I'll also tidy/refactor this other bit" | Change only what the task needs. Smallest diff that works; no new options, helpers or files nobody asked for. Note other ideas for later instead. |
+
 ## Keep this skill improving
 When a site change goes wrong, or the owner corrects something on a page, write the lesson into the matching reference (and `references/lessons.md`, dated) in the same session, add a check to `scripts/lint_page.py` if a script could have caught it, then commit and push to this skill's repo. No private data: no emails, home paths, client names or unpublished prices.
 

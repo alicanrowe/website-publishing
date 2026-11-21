@@ -69,4 +69,6 @@ Each of these is a shortcut that ends in a broken result. If you catch yourself 
 ## Keep this skill improving
 When a site change goes wrong, or the owner corrects something on a page, write the lesson into the matching reference (and `references/lessons.md`, dated) in the same session, add a check to `scripts/lint_page.py` if a script could have caught it, then commit and push to this skill's repo. No private data: no emails, home paths, client names or unpublished prices.
 
+**Words.** Page copy, project blurbs and captions in the client's name follow the `human-voice` skill (`../human-voice/`): build from the client's own words, invent nothing, and run its `voice_check.py` before the page goes live.
+
 **Design taste.** How a page, render or piece looks is judged against the shared `design-taste` skill (`../design-taste/` next to this skill): read its principles and banned moves, and score visual work with its rubric before showing it. When the client critiques how anything looks, log the exact words in its `critique-log.md` in the same session, distil them into its principles or rubric, and publish it with `_publish/sync.sh design-taste`.

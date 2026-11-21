@@ -53,6 +53,9 @@ The whole site stays on the brand theme, and every project page matches the late
 ## PR and deploy
 Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (the owner's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute. Then run `node scripts/theme_audit.mjs --site <repo> --live https://the owner's site /<url>`, which loads the published page cache-busted like a hard refresh. Check the live page at both widths, then send the owner the link. A page is done when the live audit passes, not when the branch does.
 
+## Project registry
+When you publish or update a project's page, update that project's row in the project registry (`PROJECTS.md` next to the eta-estimating live data): status, the live URL, and what's next. If the project has no row, add one. That way "where is X" questions find the page.
+
 ## Keep this skill improving
 When a site change goes wrong, or the owner corrects something on a page, write the lesson into the matching reference (and `references/lessons.md`, dated) in the same session, add a check to `scripts/lint_page.py` if a script could have caught it, then commit and push to this skill's repo. No private data: no emails, home paths, client names or unpublished prices.
 

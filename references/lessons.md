@@ -73,3 +73,11 @@ the jewelry line showed, under each ring and the cuff, a row of three static "vi
 - **Flicker check on a big page.** `flicker_render_check.mjs --page` renders every model on the page, about 10 minutes each on a 4-core cloud machine, so a 64-model page takes hours. When only some models changed, pass the changed GLBs directly (`--orbit` set to the page's `data-orbit`) and split them across 4 parallel runs: 26 models took about 15 minutes, all passing.
 - **Running the checks outside the repo.** The scripts load `playwright` and `pngjs` relative to the script, so copy them to a scratch folder that has `node_modules` (pngjs installed, playwright linked from the global install) and run them from there. Install `requirements.txt` first or the build fails on `import markdown`.
 - **Handoffs through a full project folder.** When the project folder is near its limit, a write can look saved and be dropped. Count the handoff files against its file list before staging, and ask the maker to rewrite what is missing.
+
+## 22 Nov 2026: a laminated sheet-metal piece (stacked plates) in the viewer
+- **Blender exports every material double-sided by default.** A model built from stacked or butted plates has faces
+  back to back at every joint; double-sided, they flicker as the viewer turns (flicker_render_check FAIL, thin
+  horizontal streaks along the joints). Set `material.use_backface_culling = True` before `export_scene.gltf` so the
+  GLB materials are single-sided, then check again.
+- **Blender camera clip.** A camera made with `bpy.data.cameras.new` in a millimetre scene clips at 1000 units; pull
+  it back past that and the render comes out empty (only the shadow catcher). Set `clip_end` when the scene is in mm.

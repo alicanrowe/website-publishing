@@ -90,3 +90,5 @@ the jewelry line showed, under each ring and the cuff, a row of three static "vi
   metallic base look like gunmetal next to the render; lift the web GLB's base colour (about 0.68) to match the still.
 - **Square hero from a 16:9 render.** Crop inside the frame (a crop box past the edge adds a black row that the
   background check may miss at the bottom); render wide at 2560x1440 and crop 1440 square for a sharp trio frame.
+
+- 2026-11-22: the owner's site answers a bare page path with a 308 to the trailing-slash URL, so `curl -s` returns an empty body. Wait for a deploy with `curl -sL` (or `theme_audit.mjs --live`), never a plain curl grep.

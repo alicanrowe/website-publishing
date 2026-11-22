@@ -61,10 +61,13 @@ const bust = live ? `?nocache=${Date.now()}` : '';
 
 const browser = await chromium.launch();
 const raw = {};
+const httpFails = [];
 for (const [name, w] of [['desktop', 1440], ['phone', 390]]) for (const pg of pages) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, extraHTTPHeaders: live ? { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } : {} });
   const page = await ctx.newPage();
-  await page.goto(base + (pg === '/' ? '/' : pg + '/') + bust, { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
+  const resp = await page.goto(base + (pg === '/' ? '/' : pg + '/') + bust, { waitUntil: 'networkidle', timeout: 60000 }).catch(() => null);
+  // a page that isn't there (not deployed yet, wrong URL) must fail, not pass with no text to check (2026-11-22)
+  if (!resp || resp.status() >= 400) httpFails.push(`${pg} ${name}: HTTP ${resp ? resp.status() : 'no response'}`);
   await page.waitForTimeout(1200);
   const ex = Object.entries(ALLOW).find(([p]) => pg.startsWith(p))?.[1].exempt || '';
   raw[`${pg} ${name}`] = await page.evaluate((ex) => {
@@ -153,5 +156,6 @@ for (const pg of pages) {
   console.log(`\n${pg}`);
   for (const [k, n] of [...m].sort()) console.log(`  ${k}${n > 1 ? `  (x${n})` : ''}`.slice(0, 260));
 }
-console.log(`\n${pages.length} page(s) audited, ${fails} distinct fail(s)`);
-process.exit(fails ? 1 : 0);
+for (const f of httpFails) console.log(`FAIL ${f}`);
+console.log(`\n${pages.length} page(s) audited, ${fails + httpFails.length} distinct fail(s)`);
+process.exit(fails || httpFails.length ? 1 : 0);

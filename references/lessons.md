@@ -2,6 +2,9 @@
 
 Dated, newest first. Each lesson is also written into the reference it belongs to.
 
+## 2026-11-22
+- **The live audit passed a page that was not live yet.** Right after merging Cast Chairs, `theme_audit.mjs --live` reported `ok` for /cast-chairs while Cloudflare was still building and the URL returned 404: an error page has no off-brand text to fail. The audit now FAILs any page that answers with HTTP 400 or above (or not at all). Wait for the Cloudflare Pages check on `main` to finish before the live audit, and confirm the page content with a fetch.
+
 ## 2026-11-19
 - **Moth is raw white ash until the final finish (the owner).** The web GLBs (v6w, v7c) carried a near-black ash texture, so the home hero and cards showed a black case while the text said raw white ash. `scripts/glb_recolor_texture.py` swaps a material's base-colour texture for a recoloured copy that keeps the grain. Check a model's colours against the page text before publishing it.
 
@@ -81,3 +84,9 @@ the jewelry line showed, under each ring and the cuff, a row of three static "vi
   GLB materials are single-sided, then check again.
 - **Blender camera clip.** A camera made with `bpy.data.cameras.new` in a millimetre scene clips at 1000 units; pull
   it back past that and the render comes out empty (only the shadow catcher). Set `clip_end` when the scene is in mm.
+- **Dimension red is `#96281c`** (22 Nov 2026). A drawing in another dark red (`#8b1d1d`) fails theme_audit on every
+  label; generate drawings with the brand red from the start.
+- **Small metal pieces in the viewer read darker than in Cycles.** model-viewer's neutral light makes a 0.5 grey
+  metallic base look like gunmetal next to the render; lift the web GLB's base colour (about 0.68) to match the still.
+- **Square hero from a 16:9 render.** Crop inside the frame (a crop box past the edge adds a black row that the
+  background check may miss at the bottom); render wide at 2560x1440 and crop 1440 square for a sharp trio frame.

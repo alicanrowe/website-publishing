@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Check that every wood texture in a GLB is straight grain running along U.
+"""SUPERSEDED (2026-11-23): use scripts/web_grain_check.py to check, and hardwood-furniture-cad scripts/web_glb.py
+to build furniture GLBs. This script missed merged parts and exempted textures by name.
+
+Check that every wood texture in a GLB is straight grain running along U.
 
 glb_grain_check.py proves the UVs lay the texture along each part, but a texture can still be
 flat-sawn figure (cathedrals, swirls, knots), which reads as wavy grain on every part however

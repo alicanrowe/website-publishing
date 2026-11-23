@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Re-map the UVs of every wood part so the grain runs along the part.
+"""SUPERSEDED (2026-11-23): use scripts/web_grain_check.py to check, and hardwood-furniture-cad scripts/web_glb.py
+to build furniture GLBs. This script missed merged parts and exempted textures by name.
+
+Re-map the UVs of every wood part so the grain runs along the part.
 
 Procedural grain (object or generated coordinates) doesn't survive a GLB export, and an
 auto-unwrap or box projection lays a baked grain texture diagonally or across the part.

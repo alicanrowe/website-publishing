@@ -47,8 +47,7 @@ Version lines in `tools/sources.json` (per page): `{"line": "case", "model": "<g
 
 ## 3d. Wood and flicker on 3D models
 ```
-python3 scripts/glb_grain_check.py model.glb        # UVs: grain along every part
-python3 scripts/glb_texture_check.py model.glb      # the texture itself: straight grain along U, not flat-sawn figure
+python3 scripts/web_grain_check.py plain.glb --spec piece.cadcheck.json --sheet grain.jpg   # per part: grain along it, end grain on ends, straight textures (no name exemptions)
 blender -b -P scripts/glb_zfight_check.py -- model.glb   # coincident surfaces of different materials (flicker)
 blender -b -P scripts/glb_zfight_fix.py -- in.glb out.glb # sink covered vertices (--delete removes faces: tore thin parts once)
 blender -b -P scripts/glb_fidelity_check.py -- full.glb web.glb   # every part of the web model against the full model: crushed, torn, missing

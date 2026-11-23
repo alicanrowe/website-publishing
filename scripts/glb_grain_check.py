@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Grain direction check for the wood parts of a web or render GLB.
+"""SUPERSEDED (2026-11-23): use scripts/web_grain_check.py to check, and hardwood-furniture-cad scripts/web_glb.py
+to build furniture GLBs. This script missed merged parts and exempted textures by name.
+
+Grain direction check for the wood parts of a web or render GLB.
 
 For every triangle of a wood material it finds the 3D direction in which the texture's grain
 runs (the long axis of the texture image: U for a wide image, V for a tall one), and compares it

@@ -1,7 +1,7 @@
 # Images, video and 3D for the site
 
 ## Images
-- **2000 px wide maximum**, JPEG quality about 82, progressive. The build shrinks anything bigger, but the repo keeps the full file forever, so shrink before committing. Full-size originals live outside the repo (the owner's project keeps them under `site-static/_originals/`).
+- **2000 px wide maximum**, JPEG quality about 82, progressive. The build shrinks anything bigger, but the repo keeps the full file forever, so shrink before committing. Full-size originals live outside the repo (the owner keeps them in a Drive backup, not in the project folder).
 - **Renders** with an opaque background: save as JPEG, not PNG. The build turns opaque PNGs over 400 KB into JPEGs and rewrites the links, but a JPEG from the start is smaller and clearer. Keep PNG only for real transparency or line art.
 - **Line drawings and diagrams:** inline SVG (inline-layout.md).
 - Names lowercase with dashes, inside `content/img/<page>/`. Version in the name when it changes (`-v3`) so browsers don't show a cached old one.

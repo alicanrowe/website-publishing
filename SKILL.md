@@ -61,6 +61,7 @@ Each of these is a shortcut that ends in a broken result. If you catch yourself 
 
 | The excuse | What to do instead |
 |---|---|
+| "gltfpack defaults are fine for this GLB" | Engraved or boolean-cut plates have long sliver triangles that the default 14-bit positions crack into grey streaks and flicker. Pack those with `-vp 16`, then run `flicker_render_check.mjs --page`. |
 | "It looks fine on desktop" | Shoot it at both widths and run layout_check at every width before the PR. |
 | "The old render is close enough" | Run version_check and source_check; a stale file on the page fails. |
 | "Merged means it's live" | Run the live audit on the published page; it's done when that passes. |

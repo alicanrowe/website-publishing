@@ -98,3 +98,10 @@ the jewelry line showed, under each ring and the cuff, a row of three static "vi
 - 2026-11-23: The studio accent moved from firebrick to IKIYA lining green `#1D847E` (owner's pick). Card facts became green chips site-wide through `site.css`, so no page note changed. theme_audit had to learn the one allowed plate (white on the accent); otherwise every chip FAILs as "text on a coloured plate".
 - 2026-11-23: `position: sticky` does nothing on this site's pages: `body` has `overflow-x: hidden; overflow-y: auto`, so it is the nearest scroll box but never scrolls (the window does). For a pinned stage (a scroll-scrubbed image sequence, say) make the stage `position: absolute` inside a tall section and set `transform: translateY(...)` from the section's `getBoundingClientRect()` on scroll. Check it with screenshots at several scroll positions, not only the top of the page.
 - 2026-11-23: `lint_page.py`'s Newsreader-weight check reads `font:400 ...` up to the next `;`, so a mono rule that ends in `}` without a `;` is joined to the next rule's `var(--serif)` and warns falsely. End every `font:` shorthand with `;`.
+
+- 2026-11-23, merging two projects into one page (Metamer into Rachis, Gill into Chrysalis): keep the stronger
+  page's URL, put each piece under its own variant heading with an id (`#hanging`, `#standing`), keep each variant's
+  own trio, spec and details, add a 301 for the old URL in `site.json` redirects, merge the two `tools/sources.json`
+  entries (sources and versions) into the kept page, and delete the old note. A merged project lives in one category:
+  `lint_page.py` fails a home page that shows the same URL twice, so drop the other category's card instead of
+  pointing two cards at one page.

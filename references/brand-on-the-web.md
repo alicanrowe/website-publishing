@@ -32,6 +32,7 @@ Grey ink only for text, numbers, labels and links. The dark red `#96281c` belong
 - Plex Mono as body text; Jost; weight 400+ Newsreader.
 - Text on plates, scrims or boxes.
 - Firebrick red as a general accent. It appears once: the home page plumb line and GRAVITY / GRACE turning red when the line comes to rest.
+- The studio accent (IKIYA lining green `#1D847E`, `--ar-accent`, picked by the owner 2026-11-23) anywhere but its three jobs: specimen-tag chips with white mono type (`.ar-chip`, project-card facts), the 2px active-nav underline, and the 3D picker's selected dot and hover. Never green body text, titles, backgrounds, buttons or borders. `theme_audit.mjs` accepts white text on exactly `rgb(29,132,126)` and fails any other coloured plate.
 
 ## Words over photos
 - White Newsreader 300, at least 12 to 13px, with a soft dark edge (a tight and a wide blurred dark copy behind it), never a hard light outline or halo. On the plain cyc, plain ink with no effect. Check legibility over the brightest and the busiest part of the image, and in every colour state the words can take.

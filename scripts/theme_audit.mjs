@@ -130,7 +130,9 @@ for (const [key, o] of Object.entries(raw)) {
     if (t.fam === 'IBM Plex Mono' && t.fs > 12.5 && !/^(text|tspan)/.test(t.el)) add(pg, 'FAIL', `Plex Mono at ${t.fs}px (brand: mono only for small credits, numbers and dimensions; body text is Newsreader): ${t.el}`);
     const drawingRed = t.col === 'rgb(150, 40, 28)' && /^(text|tspan)/.test(t.el);  // dimension red on SVG drawings
     if (!okInk(t.col) && !drawingRed && !(allow.darkHeader && /^a\b/.test(t.el) && /^rgba?\(255, 2[45]\d/.test(t.col))) add(pg, 'FAIL', `text colour ${t.col} (brand: grey ink, nav mauve): ${t.el}`);
-    if (t.bg && !okBg(t.bg) && !(allow.darkHeader && /^(a|header)/.test(t.el))) add(pg, 'FAIL', `text on a coloured plate ${t.bg}: ${t.el}`);
+    // the studio specimen tag (brand THEME.md "Studio accent"): white type on the accent green #1D847E is allowed
+    const studioChip = t.bg === 'rgb(29, 132, 126)' && t.col === 'rgb(255, 255, 255)';
+    if (t.bg && !okBg(t.bg) && !studioChip && !(allow.darkHeader && /^(a|header)/.test(t.el))) add(pg, 'FAIL', `text on a coloured plate ${t.bg}: ${t.el}`);
   }
   for (const b of o.boxes) add(pg, 'WARN', b);
 }

@@ -113,3 +113,9 @@ The Hardwood Furniture CAD card on /ai showed swirly contour-map figure on the p
 - **2026-11-23 `source_check.py --write-lock` moves every project's line, not just yours.** Run for one page's redo, it also bumped two other projects' lock lines to model versions their own threads had not published yet, and the build then refused those pages. Commit only your page's lock lines: write the lock, `git diff tools/versions.lock.json`, and revert any line that belongs to a page you did not touch (or edit your line by hand).
 
 - **2026-11-23 A set of pieces is published as a set (Nine Lives).** Nine sawhorses made in separate rounds had drifted: some had renders and a 3D model, some had neither, specs disagreed with the models. Fix: one kit that every piece goes through (checks, drawing, renders, seat sheet, page generator) and a page built only from checked outputs, so a piece without the full set can't be published. Two viewer lessons: (1) polished steel GLBs (base colour 0.8, metallic 1) read as white plastic in model-viewer on the neutral environment; use base about 0.40, roughness 0.10 and `data-env="legacy" data-exposure="0.8"` (as the jewelry line does). Washed and blackened finishes are fine on neutral. (2) A test page for a gltfpack `-cc` GLB must set `self.ModelViewerElement={meshoptDecoderLocation:...}` before loading model-viewer, or it renders nothing. `source_check.py` versions only read `vN` tokens; a project versioned `rN` should list sources only.
+
+- 2026-11-24 (Ogive T-02): `source_check.py --write-lock` rewrites the lock line of *every* page whose project files
+  moved on, not only yours. That run bumped another page's model line (v13 to v14) while its page still linked v13,
+  so committing the whole lock would have made the build refuse that unrelated page. Before committing
+  `tools/versions.lock.json`, diff it and keep only your own page's entries; leave other pages' bumps to the thread
+  that owns them.

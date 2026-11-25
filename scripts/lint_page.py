@@ -18,6 +18,7 @@ Flags (exit 1 if any ERROR):
   WARN   style rules in the page that don't start with a page prefix (they can leak into other pages)
   ERROR  the same project shown twice on one page (two tiles, bands or heroes in different
          sections linking to the same page; anchors like /nine-lives#rest count as /nine-lives)
+  ERROR  two cards in one section linking to the same page (/boots and /boots#jackets); a group gets one card
   WARN   brand slips: font-weight 400+ on Newsreader text, Jost, pure #000 body text, rounded corners, box shadows
   ERROR  (site-wide, every run) a home page section and its category page disagree: a piece on the
          category page (e.g. /sculpture) that the home page doesn't show anywhere (its section, the
@@ -171,6 +172,7 @@ for f in targets:
     main = re.sub(r'<header\b.*?</header>|<footer\b.*?</footer>|<nav\b.*?</nav>', '', body, flags=re.S)
     chunks = re.split(r'<section\b|<div class="sec\b|^%%[^\n]*%%\s*$', main, flags=re.M)
     where = collections.defaultdict(set)
+    count = collections.Counter()
     tile = re.compile(r'<(?:a|div)\b[^>]*class="[^"]*\b(?:cell|panel|tile|ar-cell|ar-tile|nr9-c|card|ar-cap)\b[^"]*"[^>]*>'
                       r'(?:\s*<div[^>]*data-href="([^"]+)")?', re.S)
     for i, ch in enumerate(chunks):
@@ -180,6 +182,10 @@ for f in targets:
             h = h.group(1) if h else (m.group(1) or '').split('#')[0]
             if h and h not in ('/',) and h.rstrip('/') != u.rstrip('/'):
                 where[h.rstrip('/')].add(i)
+                count[(h.rstrip('/'), i)] += 1
+    for (h, i), n in sorted(count.items()):
+        if n > 1:
+            say('ERROR', f, f'{h} has {n} cards in one section (a group gets one card; /boots and /boots#jackets count as one page)')
     for h, secs in sorted(where.items()):
         if len(secs) > 1:
             say('ERROR', f, f'{h} is shown in {len(secs)} places on this page (show each project once)')

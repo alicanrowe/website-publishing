@@ -7,21 +7,98 @@ Fails (exit 1) when any of these is true:
   across    on a part's long faces the texture's grain (U) doesn't run along the part's grain axis
   end       end-grain material on a long face, or long-grain material on an end face
   figure    a long-grain texture that isn't straight: cathedral, swirl, contour-map figure (no name exemption)
+  curved    a part whose surface twists, sweeps or bends ALONG its grain (over 10% of its long-face area turns more
+            than 20 deg over the part's length) wearing a 2D board texture: the figure follows the surface like one
+            board bent into shape (Shrine bench plank, 25 Nov). Turning round the grain (dowels, handles, roundovers)
+            is fine. Bake its real glue-up in 3D with web_laminate.py (spec "lamination"), or,
+            only if it really is one steam-bent board or a bent lamination, mark the part "bent": true in the spec.
+  bake      a part baked by web_laminate.py whose texture no longer matches the solid wood re-evaluated at
+            sampled surface points (moved, rescaled, re-unwrapped or re-compressed after the bake), or whose
+            bake disagrees with the spec's lamination
 The grain axis of each part comes from, in order: the node's extras "grain_axis" (written by web_glb.py),
 the cadcheck spec (--spec, "grain": "x|y|z", model axes Z up), then the part's longest side.
 
   python3 scripts/web_grain_check.py model.glb [--spec piece.cadcheck.json] [--sheet textures.jpg]
-Meshopt/Draco GLBs: decode first, `npx @gltf-transform/cli copy in.glb plain.glb`.
+Needs solid_wood.py next to it.
+Meshopt/Draco/quantized GLBs (every site GLB) are decoded and dequantized first with npx @gltf-transform/cli.
 Passing this is necessary, not enough: also look at the site's own viewer from two sides
 (website-publishing scripts/shoot.mjs) and at the --sheet.
 """
 import argparse, io, json, re, sys
+import os
 import numpy as np
 import trimesh
 from PIL import Image
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from solid_wood import wood_color  # noqa: E402  (ships next to this script in both skills)
 
 WOOD = re.compile(r'(?i)walnut|oak|ash|maple|cherry|cedar|wood|ply|birch|mahogany|sapele|pine|grain|rift|flat')
 END = re.compile(r'(?i)\bend\b|end[ _-]?grain')
+CREASE = 20   # deg: neighbours further off than this are a real edge (bevel, miter, arris), not a curve
+SOLID = re.compile(r'(?i)\bsolid\b')
+
+
+def vertex_faces(F, nv):
+    """(nv, max degree) incident face ids, -1 padded (trimesh's trips on degenerate faces)."""
+    v = F.ravel(); f = np.repeat(np.arange(len(F)), 3)
+    o = np.argsort(v, kind='stable'); v, f = v[o], f[o]
+    cnt = np.bincount(v, minlength=nv); start = np.r_[0, np.cumsum(cnt)[:-1]]
+    col = np.arange(len(v)) - start[v]
+    out = -np.ones((nv, max(1, cnt.max())), np.int64); out[v, col] = f
+    return out
+
+
+def grain_bend(V, F, VF, f, t, length):
+    """Share of the long-face area where the surface turns as you walk along the grain the texture shows.
+
+    A straight board, a roundover or chamfer running along the grain, a turned handle or dowel: walking along the
+    grain the surface normal stays put, and a 2D grain texture is right. A twist, sweep or bend along the grain
+    (the Shrine bench plank) turns the normal, and a 2D texture there is one board bent into shape. Per face the
+    normal's rate of turn along the grain, from its corner normals (angle-weighted, so the triangulation doesn't
+    matter, over the faces within CREASE (20) deg only, so real board edges, bevels and miters don't count), times the part's length along the
+    grain must stay under 0.35 rad (20 deg)."""
+    e0, e1_, e2_ = V[F[:, 1]] - V[F[:, 0]], V[F[:, 2]] - V[F[:, 1]], V[F[:, 0]] - V[F[:, 2]]
+    n = np.cross(e0, -e2_); A = np.linalg.norm(n, axis=1); n = n / (A[:, None] + 1e-15)
+    if not len(f): return 0.0
+    def ang(u, v):
+        return np.arccos(np.clip((u * v).sum(-1) / (np.linalg.norm(u, axis=-1) * np.linalg.norm(v, axis=-1) + 1e-15), -1, 1))
+    corner = np.stack([ang(e0, -e2_), ang(e1_, -e0), ang(e2_, -e1_)], 1)        # interior angle at each corner
+    Nc = np.zeros((len(f), 3, 3))
+    for k in range(3):
+        v = F[f, k]; nb = VF[v]; ok = nb >= 0; nbs = np.where(ok, nb, 0)
+        ok &= (n[nbs] * n[f][:, None, :]).sum(-1) > np.cos(np.radians(CREASE))
+        which = np.argmax(F[nbs] == v[:, None, None], axis=-1)                    # the corner of each neighbour at v
+        w = np.take_along_axis(corner[nbs], which[..., None], -1)[..., 0] * ok
+        Nc[:, k] = (n[nbs] * w[..., None]).sum(1)
+    Nc /= (np.linalg.norm(Nc, axis=-1, keepdims=True) + 1e-15)
+    p0, p1, p2 = V[F[f, 0]], V[F[f, 1]], V[F[f, 2]]; a1, a2 = p1 - p0, p2 - p0
+    G00, G01, G11 = (a1 * a1).sum(1), (a1 * a2).sum(1), (a2 * a2).sum(1)
+    r0, r1 = (t * a1).sum(1), (t * a2).sum(1)
+    det = G00 * G11 - G01 ** 2; det = np.where(np.abs(det) < 1e-30, 1e-30, det)
+    a = (r0 * G11 - r1 * G01) / det; b = (r1 * G00 - r0 * G01) / det          # t = a a1 + b a2 in the face plane
+    dN = a[:, None] * (Nc[:, 1] - Nc[:, 0]) + b[:, None] * (Nc[:, 2] - Nc[:, 0])
+    bent = np.linalg.norm(dN, axis=1) * length > 0.35
+    return float(A[f][bent].sum() / (A[f].sum() + 1e-15))
+
+
+def bake_fidelity(prims, lam, n=3000, seed=0):
+    """Texture vs solid wood re-evaluated at random surface points: (median abs diff, luminance correlation)."""
+    rng = np.random.default_rng(seed); cs, ts = [], []
+    for T, g in prims:
+        img = np.asarray(g.visual.material.baseColorTexture.convert('RGB'), float) / 255; H, W = img.shape[:2]
+        A = g.area_faces; k = max(200, int(n * A.sum() / sum(gg.area_faces.sum() for _, gg in prims)))
+        f = rng.choice(len(A), k, p=A / A.sum()); r = rng.random((k, 2)); fl = r.sum(1) > 1; r[fl] = 1 - r[fl]
+        b = np.c_[1 - r.sum(1), r]; Fc = g.faces[f]
+        P = (b[:, :, None] * g.vertices[Fc]).sum(1); Nn = (b[:, :, None] * g.vertex_normals[Fc]).sum(1)
+        UV = (b[:, :, None] * np.asarray(g.visual.uv)[Fc]).sum(1)
+        Pw = trimesh.transform_points(P, T); Nw = Nn @ T[:3, :3].T
+        u = lam.get('units_in', 0.0254)
+        Pm = np.stack([Pw[:, 0], -Pw[:, 2], Pw[:, 1]], 1) / u; Nm = np.stack([Nw[:, 0], -Nw[:, 2], Nw[:, 1]], 1)
+        cs.append(wood_color(Pm, Nm, lam, lam.get('species', 'walnut')))
+        # trimesh flips glTF V on load
+        ts.append(img[np.clip(((1 - UV[:, 1]) * H).astype(int), 0, H - 1), np.clip((UV[:, 0] % 1 * W).astype(int), 0, W - 1)])
+    c, t = np.vstack(cs), np.vstack(ts)
+    return float(np.median(np.abs(c - t))), float(np.corrcoef(c.mean(1), t.mean(1))[0, 1])
 
 
 def straightness(img):
@@ -42,13 +119,25 @@ def straightness(img):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('glb'); ap.add_argument('--spec'); ap.add_argument('--sheet')
+    ap.add_argument('--json', help='also write the failures here (web_laminate.py --auto reads it)')
     ap.add_argument('--min-along', type=float, default=0.9, help='share of long-face area with grain along the part')
     a = ap.parse_args()
     raw = open(a.glb, 'rb').read()
     js = json.loads(raw[20:20 + int.from_bytes(raw[12:16], 'little')])
-    if any(e in js.get('extensionsRequired', []) for e in ('EXT_meshopt_compression', 'KHR_draco_mesh_compression')):
-        sys.exit('decode first: npx @gltf-transform/cli copy in.glb plain.glb')
+    if any(e in js.get('extensionsRequired', []) + js.get('extensionsUsed', []) for e in
+           ('EXT_meshopt_compression', 'KHR_draco_mesh_compression', 'KHR_mesh_quantization')):
+        # trimesh reads quantized normals/UVs wrong, so decode AND dequantize (a site GLB is meshopt + quantized)
+        import subprocess, tempfile
+        d = tempfile.mkdtemp(); p1, p2 = os.path.join(d, 'a.glb'), os.path.join(d, 'plain.glb')
+        for cmd in (['copy', a.glb, p1], ['dequantize', p1, p2]):
+            r = subprocess.run(['npx', '--yes', '@gltf-transform/cli'] + cmd, capture_output=True, text=True)
+            if r.returncode: sys.exit('decode first: npx @gltf-transform/cli copy in.glb a.glb && npx @gltf-transform/cli dequantize a.glb plain.glb')
+        print(f'note decoded and dequantized {a.glb} -> {p2}')
+        a.glb = p2; raw = open(a.glb, 'rb').read()
+        js = json.loads(raw[20:20 + int.from_bytes(raw[12:16], 'little')])
     extras = {n.get('name'): n.get('extras', {}) for n in js.get('nodes', [])}
+    for k_, v_ in list(extras.items()):     # trimesh-written GLBs name nodes <part>_<6 hex>
+        if k_ and v_: extras.setdefault(re.sub(r'_[0-9a-f]{6}$', '', k_), v_)
     spec = json.load(open(a.spec)) if a.spec else {}
     sc = trimesh.load(a.glb, force='scene', process=False)
     fails, n_parts, textures = [], 0, {}
@@ -58,10 +147,35 @@ def main():
         # trimesh splits a multi-material mesh into one node per primitive, suffixed _<hex>
         by_node.setdefault(re.sub(r'_[0-9a-f]{6}$', '', node), []).append((T, sc.geometry[gname]))
     notes = []
+
+    def part_spec(name):
+        out = {}
+        for rx, d in spec.get('parts', {}).items():
+            if re.search(rx, name): out.update(d)
+        return out
     for node, prims in sorted(by_node.items()):
         wood = [(T, g) for T, g in prims if getattr(g.visual, 'material', None) is not None
                 and WOOD.search(getattr(g.visual.material, 'name', '') or '')]
         if not wood: continue
+        name = re.sub(r'(\.\d+)$', '', node)
+        ex = extras.get(node) or extras.get(name) or {}
+        ps = part_spec(name)
+        lam = ex.get('grain_bake')
+        if lam:     # baked in 3D by web_laminate.py: judge the bake, not the UVs
+            n_parts += 1
+            want = ps.get('lamination')
+            if want and any(str(want[k]) != str(lam.get(k)) for k in want):
+                fails.append((node, 'bake', f'baked as {lam} but the spec says {want}'))
+            solid = [(T, g) for T, g in wood if getattr(g.visual.material, 'baseColorTexture', None) is not None
+                     and getattr(g.visual, 'uv', None) is not None]
+            if len(solid) != len(wood):
+                fails.append((node, 'bake', 'baked part also carries an untextured or 2D wood primitive')); continue
+            med, corr = bake_fidelity(solid, lam)
+            print(f'{"ok  " if med < 0.03 and corr > 0.8 else "FAIL"} bake {node}: {lam.get("mode")}, texture vs 3D wood: '
+                  f'median diff {med:.3f}, correlation {corr:.2f}')
+            if not (med < 0.03 and corr > 0.8):
+                fails.append((node, 'bake', f'texture no longer matches the 3D wood (diff {med:.3f}, corr {corr:.2f}); re-run web_laminate.py'))
+            continue
         # flatten the node's wood primitives into one triangle list
         Ps, Fs, UVs, ENDs, Ws, off = [], [], [], [], [], 0
         for T, g in wood:
@@ -70,7 +184,7 @@ def main():
             uv = getattr(g.visual, 'uv', None)
             if img is None or uv is None:
                 notes.append(f'{node}: {mname} is flat colour (no texture), so it shows no grain; skipped'); continue
-            if not END.search(mname): textures.setdefault(mname, img)
+            if not END.search(mname) and not SOLID.search(mname): textures.setdefault(mname, img)
             P = trimesh.transform_points(g.vertices, T)
             Ps.append(P); Fs.append(g.faces + off); UVs.append(np.asarray(uv)); off += len(P)
             ENDs.append(np.full(len(g.faces), bool(END.search(mname))))
@@ -79,11 +193,10 @@ def main():
         P, F, UV, ISEND, WIDE = np.vstack(Ps), np.vstack(Fs), np.vstack(UVs), np.concatenate(ENDs), np.concatenate(Ws)
         # separate solids inside one mesh (weld by position: split normals and UV seams cut faces apart)
         wm = trimesh.Trimesh(P, F, process=False); wm.merge_vertices(merge_tex=True, merge_norm=True, digits_vertex=5)   # 10 micron: survives quantized GLBs
+        WV, WF = np.asarray(wm.vertices), np.asarray(wm.faces); VF = vertex_faces(WF, len(WV))
         comps = trimesh.graph.connected_components(wm.face_adjacency, nodes=np.arange(len(F)))
         size = np.ptp(P, 0).max()
         comps = [c for c in comps if np.ptp(P[F[c].ravel()], 0).max() > 0.25 * size]
-        name = re.sub(r'(\.\d+)$', '', node)
-        ex = extras.get(node) or extras.get(name) or {}
         if 'grain_axis' in ex:      # written per part by web_glb.py: one part, however its CAD faces connect
             comps = [np.arange(len(F))]
         merged = len(comps) > 1
@@ -125,6 +238,14 @@ def main():
             wrong = area[(endface & ~isend) if has_end else np.zeros(len(c), bool)].sum() + area[~endface & isend].sum()
             if wrong > 0.02 * area.sum():
                 fails.append((label, 'end', f'{100 * wrong / area.sum():.0f}% of its surface has end grain on a long face or long grain on an end'))
+            ext = np.ptp(Pc @ g_ax)
+            cs = grain_bend(WV, WF, VF, c[m], gd[m], ext)
+            bent = ps.get('bent') or ex.get('bent')
+            if cs > 0.10 and not bent:
+                fails.append((label, 'curved', f'{100 * cs:.0f}% of its long faces twist or bend along the grain, but it wears one 2D board '
+                              'texture (reads as one board bent into shape): bake its glue-up with web_laminate.py, spec "lamination"'))
+            elif cs > 0.10:
+                notes.append(f'{label}: {100 * cs:.0f}% curved, declared bent (one steam-bent board or a bent lamination)')
     sheet = []
     for mname, img in textures.items():
         mean, off = straightness(img)
@@ -138,6 +259,8 @@ def main():
         S.save(a.sheet, quality=85)
     for t in notes: print('note', t)
     for n, k, why in fails: print(f'FAIL {k:10s} {n}: {why}')
+    if a.json:
+        json.dump([dict(node=re.sub(r'\[\d+\]$', '', n), kind=k, why=why) for n, k, why in fails], open(a.json, 'w'), indent=1)
     print(f'{n_parts} wood parts, {len(textures)} long-grain textures: ' + ('grain OK' if not fails else f'{len(fails)} failures'))
     sys.exit(1 if fails else 0)
 

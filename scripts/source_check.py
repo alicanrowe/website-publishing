@@ -27,6 +27,8 @@ files were deleted, and "nothing to compare" must never read as a pass.
 --write-lock saves the newest versions to tools/versions.lock.json in the site repo; the site's build
 reads it and refuses to build a page that links an older file, so a stale page can't deploy even from a
 machine without the project files.
+It also runs name_check.py (a page's "record": current names, retired names, old URLs) and saves the names
+in the lock, so the build refuses retired names too.
 """
 import argparse, glob, json, os, subprocess, sys, time
 
@@ -93,9 +95,18 @@ for page, spec in cfg.get('pages', {}).items():
             if why: print(f'   allowed {r} ({vs(t)}): {why}'); continue
             stale += 1
             print(f'STALE {page}/{ln["line"]}: {r} is {vs(t)}, the project files are at {vs(newest)} ({os.path.relpath(src, A.projects)})')
+# names: a renamed project or piece must be renamed everywhere (name_check.py, the page's "record")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import name_check
+nfails, nwarns, nlock = name_check.run(A.site, A.projects, cfg)
+for w in nwarns: print(w)
+for f in nfails: print(f)
+for page, names in nlock.items():
+    lock.setdefault(page, {'lines': [], 'allow': []})['names'] = names
 if A.write_lock and lock:
     json.dump(lock, open(os.path.join(A.site, 'tools', 'versions.lock.json'), 'w'), indent=1)
     print('wrote tools/versions.lock.json')
 print(f'{behind} page(s) behind their sources' if behind else 'every mapped page is newer than its sources')
 print(f'{stale} file(s) older than the newest model version' if stale else 'every versioned file matches the newest model version')
-sys.exit(1 if (behind or stale) else 0)
+print(f'{len(nfails)} name problem(s)' if nfails else 'every recorded page, card and link uses the current names')
+sys.exit(1 if (behind or stale or nfails) else 0)

@@ -40,6 +40,7 @@ Window widths 390, 768, 1024, 1280, 1440 (and 1440 at 2x), 1680, 1920. Flags CLI
 ```
 python3 scripts/version_check.py --site <repo>
 python3 scripts/source_check.py --site <repo> --projects <project files root> --write-lock   # pages older than their project sources, and files older than the newest model version (tools/sources.json); refreshes tools/versions.lock.json for the build gate
+python3 scripts/name_check.py --site <repo> --projects <project files root>   # also run by source_check: names, piece names, old URLs and cards against each project's RECORD.json
 ```
 Lists every page that uses a model or render when the same folder holds a later version of it (v6s next to v6w, r9 next to r10), and every STALE still, PDF or video whose version token is older than the newest GLB of the same project on that page (moth-v6pa-*.jpg beside moth-case-v7c-lite.glb). Intentional history (iteration option labels, drawings confirmed current) goes in the script's ALLOW list with the reason. the owner's rule: every page, card and 3D tile shows the latest version of its project. Also compare the project's own files (CAD, renders, GLBs in the project folder) with what the site holds; a newer version there means the site gets it in the same session.
 

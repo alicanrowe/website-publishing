@@ -1,3 +1,5 @@
+![Website publishing: Portfolio pages with renders, a 3D viewer, drawings and specs, checked before they go live.](.github/banner.png)
+
 # Website publishing skill (the owner's site)
 
 A Claude skill for adding and changing pages on the owner's site: a static site built from Markdown notes (an Obsidian vault) by a small Python builder and hosted on Cloudflare Pages.

@@ -10,7 +10,7 @@ files it is built from, and flags every source changed after the page's last com
 Exit code 1 when a page is behind its sources.
 
 tools/sources.json:
-  {"pages": {"dancers": {"sources": ["shop-bots/*/site/*.jpg", "shop-bots/*/build_guide.md", ...],
+  {"pages": {"hive": {"sources": ["shop-bots/*/site/*.jpg", "shop-bots/*/build_guide.md", ...],
                          "ignore": ["shop-bots/_old/*"]}}}
 Globs are relative to --projects. Add a page's entry when you first build it from project files.
 

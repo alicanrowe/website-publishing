@@ -81,18 +81,6 @@ def reshade(V, F, crease):
     acc = np.zeros((lab.max() + 1, 3))
     np.add.at(acc, lab, fn[cf] * w[:, None])
     out = acc[lab]
-    # a fan that wraps round a sharp point (needle tip, cone apex) joins faces far apart through its neighbours; there
-    # each corner keeps only the faces of its fan within crease of its own face
-    on = out / np.maximum(np.linalg.norm(out, axis=1), 1e-30)[:, None]
-    far = np.nonzero(np.einsum('ij,ij->i', on, fn[cf]) < np.cos(np.radians(crease)))[0]
-    if len(far):
-        order_l = np.argsort(lab, kind='stable'); sl = lab[order_l]
-        st = np.searchsorted(sl, lab[far]); en = np.searchsorted(sl, lab[far], side='right')
-        cosc = np.cos(np.radians(crease))
-        for c, a0, a1 in zip(far.tolist(), st.tolist(), en.tolist()):
-            mem = order_l[a0:a1]; fm = fn[cf[mem]]
-            sel = fm @ fn[cf[c]] >= cosc
-            out[c] = (fm[sel] * w[mem][sel][:, None]).sum(0)
     nl = np.linalg.norm(out, axis=1); bad = nl < 1e-12
     out[bad] = fn[cf[bad]]
     out /= np.maximum(np.linalg.norm(out, axis=1), 1e-30)[:, None]

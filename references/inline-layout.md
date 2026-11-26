@@ -9,6 +9,11 @@ Any page that lists projects (home, the category pages, /digital) uses the home 
 - Crop on the subject: for a wide or square image in a 4:5 window only the horizontal position moves. Find the focal point (x as a fraction of the width), then `object-position` = (x − w/2) ÷ (1 − w) where w is the share of the width the window shows. Check it in the screenshot.
 - `lint_page.py` errors on the older tile styles (`rb-grid`, `ar-cell`, `ar-tile`, `ar-portfolio`).
 
+# Galleries of someone's work (profiles, process, references)
+
+- **Never crop a piece.** Work photos go in justified rows: every photo whole at its own ratio, one height per row (`display:flex; flex-wrap:wrap`, each figure `flex: r 1 (r × 320)px` with r = width ÷ height, img `height:auto`, a `::after{flex:999}` filler so the last row isn't stretched). No `object-fit: cover`, no forced 4:5 or square. On /team (25 Nov 2026) a 4:5 cover grid cut the tops off chairs and the sides off tables, and the owner caught it.
+- Only project cards (`.ar-win`, cropped on the subject) and small avatars (120 px or less) may use cover. `layout_check.mjs` fails `CROP` on any other cover image that shows under 90% of its photo. Mark an image `data-crop-ok` only after looking at the crop in a screenshot.
+
 # Render, 3D viewer and drawing inline, with the spec table
 
 A piece with a model is shown as one block: the render, the live 3D model and the dimension drawing side by side, then a short text and the spec table under them. A visitor reads the three together: what it looks like, how it turns, how big it is. `templates/project-page.md` has this layout ready to fill in.

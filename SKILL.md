@@ -9,6 +9,18 @@ metadata:
 
 The site is plain files: Markdown notes in `content/`, built to static HTML by `tools/build.py`, hosted on Cloudflare Pages, which rebuilds on every push to `main`. Skills that make the work (furniture CAD, metal casting, concrete molds, robotics) hand their outputs to this skill for the site part.
 
+## HARD RULE: the quality gate (the owner, 26 Nov 2026)
+Nothing goes on the site until `python3 tools/gate.py --changed --write` in the site repo passes for every page you touched, and the refreshed `tools/gate.lock.json` is in the same PR. This replaces "run the checks you think apply": the gate runs all of them, on every page you changed, and the site's build (which Cloudflare runs on every push to `main`) refuses to build while any page differs from its last pass, so the old deployment stays up. No PR merges without the gate's output pasted in it. CI not starting is not a reason to skip it: the gate is local.
+
+What it fails (details in the site's `tools/gate.py`):
+- **CAD fidelity** (`tools/gate/cad_fidelity.py`, every GLB): stand-in names, bare-box primitives and parts under the triangle floor on any real-world object (vehicle, tool, body, bought hardware), a vehicle under 150k triangles or with a boxy body, visible facets, floating parts, parts inside parts. Context objects count: a truck, a plane or a mannequin around the piece is held to the same bar as the piece.
+- **Photo match** (`tools/gate/photo_match.py`): every real-world vehicle, tool or body needs reference photos from front, side and one more view in the site's `tools/gate.json`, and the shipped model, rendered from each photo's camera, must overlap its outline (IoU >= 0.90) and reproduce its interior detail (edge recall >= 0.55). A right outline with no grille, lamps or glazing fails.
+- **Crop and aspect** (`tools/gate/page_check.mjs`): any cover crop that hides anything but plain white cyc, any stretched image, any image drawn wider than its file. No class or attribute skips it.
+- **Theme**: `theme_audit.mjs` on the page.
+- **Render quality**: renders on white, no render noise.
+- **Blind critique** (`tools/gate/critique.py`): a different model, given only the page as a visitor sees it, 3D close-ups and the design-taste guide (never the maker's notes), scores it on the rubric. Every gate passes, no zero, at least 20/24.
+An exception goes in the page's `allow` list in `tools/gate.json` with `why` and who confirmed it; never loosen a threshold to get a page through, never hand-edit the lock, never run the build with `AR_GATE_SELF`. Pages that were live before the gate are `legacy` in the lock with their known fails; the first change to one has to pass in full.
+
 ## Before you touch a page
 1. Pull the latest `main` (other sessions edit the site the same day) and work on your own branch.
 2. Read `references/site-structure.md` (how a note becomes a page) and `references/brand-on-the-web.md` (fonts, colours, spacing, what never goes on the site).
@@ -57,7 +69,7 @@ A project's names live in its record, `RECORD.json` in the project's folder in t
 9. Only screenshots that passed go to the owner.
 
 ## PR and deploy
-Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (the owner's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute. Then run `node scripts/theme_audit.mjs --site <repo> --live https://the owner's site /<url>`, which loads the published page cache-busted like a hard refresh. Check the live page at both widths, then send the owner the link. A page is done when the live audit passes, not when the branch does.
+Run `python3 tools/gate.py --changed --write` last, after every other change (any later edit changes the fingerprint and the build will refuse it). Open a PR from your branch with before/after screenshots at both widths, then follow `references/pr-and-deploy.md`. When the checks pass, merge it yourself without asking (the owner's standing rule since 18 Nov 2026). Merging to `main` publishes the site in about a minute. Then run `node scripts/theme_audit.mjs --site <repo> --live https://the owner's site /<url>`, which loads the published page cache-busted like a hard refresh. Check the live page at both widths, then send the owner the link. A page is done when the live audit passes, not when the branch does.
 
 ## Project registry
 When you publish or update a project's page, update that project's row in the project registry (`PROJECTS.md` next to the eta-estimating live data): status, the live URL, and what's next. If the project has no row, add one. That way "where is X" questions find the page.
@@ -72,6 +84,11 @@ Each of these is a shortcut that ends in a broken result. If you catch yourself 
 | "The old render is close enough" | Run version_check and source_check; a stale file on the page fails. |
 | "The reel/sheet has the new names, the page can catch up later" | Update the project's `RECORD.json` and the page in the same session; `name_check.py` fails the old name on every page, card and link. the jewelry line stayed on the site a day after the reel called it Imago (25 Nov 2026). |
 | "A 4:5 cover grid makes the photos line up" | It crops the work. Galleries use justified rows with every photo whole (inline-layout.md, "Galleries"); `layout_check.mjs` fails `CROP` (/team, 25 Nov 2026). |
+| "The gate is slow / CI is down, I'll merge and gate later" | The build refuses an ungated page; merging just breaks every deploy until someone runs it. Run `tools/gate.py --changed --write` before the PR. |
+| "It's only context around the piece (the truck, the tools, the mannequin)" | Context is held to the piece's bar. Low-poly kei trucks went live on /kei-benches (26 Nov 2026) because only the bench was judged. Model the real thing from photos or leave it out. |
+| "The outline matches the photo to 6 mm" | Outline is not fidelity. The truck matched its side photo and still had a 528-triangle cab and block mirrors. Photo match scores interior detail too, from at least three views. |
+| "I scored it on the rubric myself" | The maker never grades its own work. The gate's blind critique scores it. |
+| "I'll add an allow entry so it passes" | An allow entry needs the owner's say-so and a reason. A fail you disagree with goes to the owner, not into the allow list. |
 | "Merged means it's live" | Run the live audit on the published page; it's done when that passes. |
 | "While I'm in here I'll also tidy/refactor this other bit" | Change only what the task needs. Smallest diff that works; no new options, helpers or files nobody asked for. Note other ideas for later instead. |
 

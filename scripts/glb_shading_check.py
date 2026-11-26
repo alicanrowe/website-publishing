@@ -143,26 +143,26 @@ def components(n, a, b):
     return np.array([find(x) for x in range(n)])
 
 
-def panels(fn, A, fa, fb, dih, crease, min_share=0.01):
+def panels(fn, A, fa, fb, dih, crease, min_share=0.01, ids=False, join=0.5, planar=1.0):
     """Faces that belong to a FLAT PANEL: a connected run of faces agreeing within 0.5 deg, planar (every face within
     1 deg of the run's mean normal), at least min_share of the part's area, and at least 4x the area of any flat run
     it meets across a smooth edge. The last test keeps the facets of a polygonal arc or a turned handle (equal-sized
     runs side by side, meant to shade as one curve) out, while a lid next to its narrow roundover stays a panel."""
     n = len(fn); tot = A.sum()
-    flat = dih < 0.5
+    flat = dih < join
     comp = components(n, fa[flat], fb[flat])
     _, comp = np.unique(comp, return_inverse=True)
     carea = np.bincount(comp, weights=A)
     mean = np.zeros((len(carea), 3)); np.add.at(mean, comp, fn * A[:, None])
     mean /= np.maximum(np.linalg.norm(mean, axis=1, keepdims=True), 1e-12)
-    nonplanar = np.bincount(comp, weights=(angle(fn, mean[comp]) >= 1.0).astype(float), minlength=len(carea)) > 0
+    nonplanar = np.bincount(comp, weights=(angle(fn, mean[comp]) >= planar).astype(float), minlength=len(carea)) > 0
     ok = (carea >= min_share * tot) & ~nonplanar
-    sm = (dih >= 0.5) & (dih < crease)
+    sm = (dih >= join) & (dih < crease)
     ca, cb = comp[fa[sm]], comp[fb[sm]]
     nb = np.zeros(len(carea))
     np.maximum.at(nb, ca, carea[cb]); np.maximum.at(nb, cb, carea[ca])
     ok &= carea >= 4 * nb
-    return ok[comp]
+    return (ok[comp], comp) if ids else ok[comp]
 
 
 def check_prim(V, N, F, crease, coarse_deg):
@@ -218,12 +218,14 @@ def check_prim(V, N, F, crease, coarse_deg):
         return A[np.unique(faces)].sum() / tot
     soft = (dih > crease) & ~split & (dih < 175)
     res['softedge'] = share(np.r_[fa[soft], fb[soft]])
-    fac = (dih > 2) & (dih <= 20) & split
+    pan_f, pcomp = panels(fn, A, fa, fb, dih, crease, ids=True)
+    # an edge on a flat panel is the panel's own edge (a taper, a faceted ogive), meant to show; facets are curves
+    fac = (dih > 2) & (dih <= 20) & split & ~(pan_f[fa] | pan_f[fb])
     res['facets'] = share(np.r_[fa[fac], fb[fac]])
     crs = (dih > coarse_deg) & (dih <= crease) & ~split
     res['coarse'] = share(np.r_[fa[crs], fb[crs]])
     # flat panels: see panels(); every corner on a panel must carry the panel's own normal
-    panel = panels(fn, A, fa, fb, dih, crease)
+    panel = pan_f
     lean = dev.max(1) > 2.0
     res['smeared'] = A[panel & lean & (dev.max(1) <= 90) & ~thin].sum() / tot
     return res, tot

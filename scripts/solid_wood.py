@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import woodlib as W  # noqa: E402  THE wood library: colours and the board model live there, never here
 
 # mean oiled colour per species (sRGB), from references/woods.json (photo median where measured)
-SPECIES = {k: tuple(v['photo']['median'] if v.get('photo') else
+SPECIES = {k: tuple((v.get('look') or v['photo'])['median'] if (v.get('look') or v.get('photo')) else
                     W.lin2srgb((W.srgb2lin(v['albedo']['early']) + W.srgb2lin(v['albedo']['late'])) / 2))
            for k, v in W.LIB['species'].items()}
 MODES = ('stack', 'stave', 'panel', 'solid', 'board')
@@ -155,7 +155,9 @@ def wood_color(P, N, lam, species='walnut', contrast=None):
     val = 0.45 + contrast * (val - 0.45)
     c = dark[None] + (light - dark)[None] * val[:, None]
     c = c * (tv * shade)[:, None] * np.stack([1 + hue, np.ones_like(hue), 1 - hue], 1)
-    if lam.get('rgb'):      # keep the model's own tone: the median comes out on its colour
+    # the median comes out on the species' colour (or the model's own rgb): without this the glue-up modes read
+    # ~20% darker than the library's boards on the same piece (Shrine bench card, 26 Nov 2026)
+    if len(c) >= 64:
         c = c * (lin @ [0.2126, 0.7152, 0.0722]) / (np.median(c @ [0.2126, 0.7152, 0.0722]) + 1e-9)
     c = np.clip(c, 0, 1)
     return np.where(c <= 0.0031308, c * 12.92, 1.055 * c ** (1 / 2.4) - 0.055)

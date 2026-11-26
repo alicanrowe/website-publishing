@@ -48,6 +48,13 @@ def species(name):
     return k, LIB['species'][k]
 
 
+def target(sp):
+    """The colour the library aims for (median/p10/p90, sRGB): an approved "look" when the client picked one over
+    the photo (walnut: the PM case reel's walnut), else the photo measurement."""
+    _, S = species(sp)
+    return S.get('look') or S.get('photo')
+
+
 def stamp(sp, cut='auto', finish='oil'):
     return f'woodlib:{species(sp)[0]}/{cut}/{finish}@{VERSION}'
 
@@ -141,9 +148,12 @@ def auto_cut(W, T, name=''):
     return 'flat' if (T < W / 3 and W > 2.5) else 'rift'
 
 
-def board(P, grain=None, cut='auto', species_name='walnut', seed=0, sap=None, finish='oil', frame=None, name='', **kw):
+def board(P, grain=None, cut='auto', species_name='walnut', seed=0, sap=None, finish='oil', frame=None, name='', up=(0, 0, 1), **kw):
     """Board parameters for a part (P in inches). JSON-able: store it with the part (GLB extras, object props).
-    sap: None (heart only), 'edge' (a ring of sapwood along the +v edge), or a heart radius in inches."""
+    sap: None (heart only), 'edge' (a ring of sapwood along the +v edge), or a heart radius in inches.
+    up: the piece's up direction in P's space. On a part whose grain stands upright (case sides, doors, panels)
+    the flat-sawn cathedral arches point UP, as a maker sets them; upside-down arches read as wrong at once
+    (client review, 26 Nov 2026). Pass up=None to leave the direction to the seed."""
     sk, S = species(species_name)
     F = frame or part_frame(P, grain)
     W, T = max(F['W'], 0.05), max(F['T'], 0.05)
@@ -154,6 +164,9 @@ def board(P, grain=None, cut='auto', species_name='walnut', seed=0, sap=None, fi
     if cut == 'flat':
         v0 = W * 0.08 * (hh(2) - 0.5); w0 = -(T / 2 + D)
         tv, tw = 0.004 * (hh(3) - 0.5), S['taper'] * (0.8 + 0.4 * hh(4))
+        # the arch apex points to where the pith lies deepest under the face, i.e. along -sign(tw) * u
+        uz = float(np.dot(F['u'], np.asarray(up, float) / np.linalg.norm(up))) if up is not None else 0.0
+        if abs(uz) > 0.6: tw = -abs(tw) * np.sign(uz)
     elif cut == 'quarter':
         v0 = -(W / 2 + 1.6 * D); w0 = T * 0.15 * (hh(2) - 0.5)
         tv, tw = 0.01 * (0.5 + hh(3)), 0.003 * (hh(4) - 0.5)
@@ -174,8 +187,80 @@ def board(P, grain=None, cut='auto', species_name='walnut', seed=0, sap=None, fi
     lam = dict(mode='board', species=sk, cut=cut, finish=finish, seed=int(seed),
                origin=[float(x) for x in F['origin']], u=[float(x) for x in F['u']], v=[float(x) for x in F['v']], w=[float(x) for x in F['w']],
                pith=[float(v0), float(w0)], tilt=[float(tv), float(tw)], u0=float(u0), rh=float(rh), size=[F['L'], W, T],
-               woodlib=stamp(sk, cut, finish))
+               woodlib=stamp(sk, cut, finish), name=name)
     lam.update(kw)
+    return lam
+
+
+def apex(lam):
+    """Unit vector (in the board's space) the flat-sawn cathedral apexes point along, or None for quarter/rift."""
+    if lam.get('cut') != 'flat': return None
+    return [float(x) for x in -np.sign(lam['tilt'][1]) * np.asarray(lam['u'], float)]
+
+
+def board_extras(lam, sk=None):
+    """Material extras for a baked part: the stamp, plus the cathedral apex direction (model frame, Z up) and the
+    bookmatch partner, so the lint can fail upside-down cathedrals and unmatched door pairs in any GLB."""
+    sk = sk or lam.get('species', 'walnut')
+    ex = {'woodlib': stamp(sk, lam.get('cut', lam.get('mode')), lam.get('finish', 'oil'))}
+    ap = apex(lam) if lam.get('mode') == 'board' else None
+    if ap is not None: ex['woodlib_apex'] = [round(x, 3) for x in ap]
+    if lam.get('bookmatch'): ex['woodlib_match'] = lam['bookmatch'] if isinstance(lam['bookmatch'], str) else True
+    if lam.get('name'): ex['woodlib_part'] = lam['name']
+    return ex
+
+
+def check_boards(boards, up=(0, 0, 1)):
+    """boards: {part name: extras or board}. Fails: WOODAPEX (an upright flat-sawn part with its cathedrals
+    pointing down) and WOODMATCH (a ..._L/_R door or panel pair, both flat sawn, not bookmatched)."""
+    up = np.asarray(up, float); fails = []
+    def apx(b): return b.get('woodlib_apex') or (apex(b) if 'tilt' in b else None)
+    def cut(b): return b.get('cut') or (parse_stamp(b.get('woodlib', '')) or [None, None])[1]
+    for n, b in boards.items():
+        ap = apx(b)
+        if ap is not None and float(np.dot(ap, up)) < -0.6:
+            fails.append(('WOODAPEX', n, 'cathedral arches point down on an upright part: they must point up'))
+        m = pair_name(n)
+        if m in boards and n < m and cut(b) == 'flat' == cut(boards[m]) and not (b.get('woodlib_match') or b.get('bookmatch')
+                                                                                 or boards[m].get('woodlib_match') or boards[m].get('bookmatch')):
+            fails.append(('WOODMATCH', f'{n} + {m}', 'a door/panel pair not bookmatched: bake with web_laminate --all (or woodlib_bl.apply_all)'))
+    return fails
+
+
+BOOKMATCH = _re.compile(r'(?i)(door|panel|leaf|lid|front)')
+
+
+def pair_name(name):
+    """The bookmatch partner of a part named ..._L / ..._R (Door_Board_L <-> Door_Board_R), else None."""
+    m = _re.match(r'(.*[_ .-])([LR])$', name or '')
+    return (m.group(1) + {'L': 'R', 'R': 'L'}[m.group(2)]) if m and BOOKMATCH.search(name) else None
+
+
+def bookmatch(lam_a, P_a, P_b, name=''):
+    """Board for leaf b, bookmatched to leaf a: the two leaves are one board resawn and opened like a book, so b is
+    a's grain mirrored across the joint between them (cathedrals meet at the joint as one symmetric figure).
+    P_a, P_b: the two parts' points in the same space as lam_a."""
+    P_a, P_b = np.asarray(P_a, float), np.asarray(P_b, float)
+    u = np.asarray(lam_a['u'], float)
+    d = P_b.mean(0) - P_a.mean(0)
+    va = np.asarray(lam_a['v'], float)            # the leaves sit side by side across their width (v)
+    if abs(d @ va) < 0.5 * np.linalg.norm(d - (d @ u) * u) or np.linalg.norm(d) < 1e-6: return None
+    n = va * np.sign(d @ va)
+    j = 0.5 * ((P_a @ n).max() + (P_b @ n).min())          # the joint plane: between a's far edge and b's near edge
+    ref_p = lambda x: x - 2 * (x @ n - j) * n
+    ref_v = lambda x: x - 2 * (x @ n) * n
+    lam = json.loads(json.dumps(lam_a))
+    o = ref_p(np.asarray(lam_a['origin'], float))
+    for k in ('u', 'v', 'w'): lam[k] = [float(x) for x in ref_v(np.asarray(lam_a[k], float))]
+    # show face onto show face: if b sits a hair proud of a or higher up, the figure moves with it. The flat-sawn
+    # figure shifts ~1/taper in along the grain per inch of depth (2 mm proud put the arches 2 in apart), so match
+    # the leaves' own centres across the face (w) and along the grain (u), not only the mirror plane
+    cb = (P_b.min(0) + P_b.max(0)) / 2; ca = ref_p((P_a.min(0) + P_a.max(0)) / 2)
+    for k in ('u', 'w'):
+        ax = np.asarray(lam[k], float); o = o + ((cb - ca) @ ax) * ax
+    lam['origin'] = [float(x) for x in o]
+    lam['bookmatch'] = lam_a.get('name', '') or True
+    if name: lam['name'] = name
     return lam
 
 
@@ -203,8 +288,9 @@ def color(P, N, lam, species_name=None, finish=None, linear=False):
     fade = lambda freq: 1.0 - float(smoothstep(0.12, 0.33, freq * lod))
     g, r, th, a, b = board_coords(P, lam)
     # ring position: the log's rings wander slowly along the board and round the log (cathedral arches wobble)
-    rw = (r + 0.20 * perlin(g * 0.035 + seed * 7.1, th * 1.3, r * 0.12) + 0.07 * perlin(g * 0.11, th * 4.0 + seed, r * 0.4)
-          + 0.015 * fade(2.0) * perlin(g * 0.6, th * 20.0, r * 2.0))
+    wa = S.get('wander', 1.0)
+    rw = (r + wa * 0.20 * perlin(g * 0.035 + seed * 7.1, th * 1.3, r * 0.12) + wa * 0.07 * perlin(g * 0.11, th * 4.0 + seed, r * 0.4)
+          + S.get('ring_jag', 0.015) * fade(2.0) * perlin(g * 0.6, th * 20.0, r * 2.0))
     rpi = S['rings_per_in'] * float(lam.get('ring_scale', 1.0))
     # uneven rings: each year's width differs (a term that varies ring to ring, not a smooth stretch)
     ring = rw * rpi + 0.45 * perlin(rw * rpi * 0.23, th * 0.6, seed * 0.37) + 0.12 * perlin(rw * rpi * 0.9, th * 1.5, 5.0 + seed)
@@ -218,12 +304,19 @@ def color(P, N, lam, species_name=None, finish=None, linear=False):
     late_end = smoothstep(1 - lf - 0.3 * ls, 1 - lf + 0.1 * ls, f) * (1 - smoothstep(0.985, 1.0, f))
     late = late * (1 - e) + late_end * e                       # end grain: the same rings, crisper
     # ring-to-ring strength: some years show strong latewood, some faint
-    late = late * (0.55 + 0.45 * smoothstep(-0.4, 0.5, perlin(np.floor(ring) * 0.37 + seed, 0.5, th * 0.3)))
+    rb = S.get('ring_break', 0.45)     # and each ring line fades in and out along the board (walnut's are diffuse)
+    late = late * ((1 - rb) + rb * smoothstep(-0.4, 0.5, perlin(np.floor(ring) * 0.37 + seed, g * S.get('ring_fade', 0.0), th * 0.3)))
+    # flat-sawn apex: where the face runs tangent to a ring the latewood spreads into a broad dark flame; real
+    # boards show it, but soft (the dark wedges read as painted on the PM case card, 26 Nov 2026)
+    asf = S.get('apex_soft', 0.0)
+    if asf > 0:
+        tg = np.abs(np.cos(th) * (N @ np.asarray(lam['v'], float)) + np.sin(th) * (N @ np.asarray(lam['w'], float)))
+        late = late * (1 - asf * smoothstep(0.9, 0.995, tg) * (1 - e))
     A = S['albedo']
     early, latec = srgb2lin(A['early']), srgb2lin(A['late'])
     c = early[None] + (latec - early)[None] * late[:, None]
     # fibre: fine streaks along the grain, and broad figure patches, so no band reads as flat paint
-    fib = 1 + 0.07 * fade(9.0) * perlin(g * 0.25 + seed, a * 9.0, b * 9.0) + 0.09 * perlin(g * 0.06, a * 1.6 + seed, b * 1.6)
+    fib = 1 + S.get('fibre', 0.07) * fade(9.0) * perlin(g * 0.25 + seed, a * 9.0, b * 9.0) + 0.09 * perlin(g * 0.06, a * 1.6 + seed, b * 1.6)
     c = c * fib[:, None]
     # sapwood: rings beyond the heart radius (its edge is a ring), figure runs through it
     rh = float(lam.get('rh', S['heart_radius_in']))
@@ -240,7 +333,7 @@ def color(P, N, lam, species_name=None, finish=None, linear=False):
     zone = {'ring': 1 - smoothstep(0.0, 0.22, f), 'semi': 0.55 + 0.45 * (1 - smoothstep(0.0, 0.4, f))}.get(por, np.full_like(f, 0.5))
     pore = 1 - S['pores'] * fade(22.0 / ps) * zone * pm * (1 - 0.5 * e)
     # long colour streaks (walnut's mineral streaks), slow tone wander, one tone per board
-    st = 1 + S['streak'] * perlin(g * 0.025 + seed, a * 0.7, b * 0.7)
+    st = 1 + S['streak'] * perlin(g * 0.025 + seed, a * 0.7, b * 0.7) + S.get('streak_fine', 0.0) * perlin(g * 0.04 + 2 * seed, a * 3.2, b * 3.2)
     bt = 1 + S['board_tone'] * 2 * (h1(7, seed) - 0.5)
     shade = pore * st * bt * (1 - S['end_dark'] * e)
     c = c * shade[:, None]

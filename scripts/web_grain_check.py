@@ -98,6 +98,7 @@ def bake_fidelity(prims, lam, n=3000, seed=0):
         # trimesh flips glTF V on load
         ts.append(img[np.clip(((1 - UV[:, 1]) * H).astype(int), 0, H - 1), np.clip((UV[:, 0] % 1 * W).astype(int), 0, W - 1)])
     c, t = np.vstack(cs), np.vstack(ts)
+    print(f'      (3D wood luminance spread {c.mean(1).std():.3f}, texture {t.mean(1).std():.3f})')
     return float(np.median(np.abs(c - t))), float(np.corrcoef(c.mean(1), t.mean(1))[0, 1])
 
 

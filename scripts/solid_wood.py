@@ -19,15 +19,16 @@ Positions are in inches, model frame, Z up (the CAD frame the renders use). Outp
   from solid_wood import wood_color
   rgb = wood_color(P_in, N, dict(mode='stack', t=0.875, z0=17.6, axis='x', seed=3), species='walnut')
 """
+import os, sys
 import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import woodlib as W  # noqa: E402  THE wood library: colours and the board model live there, never here
 
-SPECIES = {   # oiled colour (sRGB 0..1), same table as web_glb.py
-    "walnut": (0.40, 0.29, 0.22), "cherry": (0.62, 0.38, 0.25), "white oak": (0.70, 0.56, 0.39),
-    "red oak": (0.74, 0.55, 0.40), "ash": (0.80, 0.70, 0.54), "hard maple": (0.85, 0.74, 0.58),
-    "mahogany": (0.55, 0.30, 0.20), "sapele": (0.52, 0.30, 0.20), "pine": (0.82, 0.68, 0.46),
-    "cedar": (0.66, 0.43, 0.30), "baltic birch": (0.84, 0.74, 0.58),
-}
-MODES = ('stack', 'stave', 'panel', 'solid')
+# mean oiled colour per species (sRGB), from references/woods.json (photo median where measured)
+SPECIES = {k: tuple(v['photo']['median'] if v.get('photo') else
+                    W.lin2srgb((W.srgb2lin(v['albedo']['early']) + W.srgb2lin(v['albedo']['late'])) / 2))
+           for k, v in W.LIB['species'].items()}
+MODES = ('stack', 'stave', 'panel', 'solid', 'board')
 AX = {'x': 0, 'y': 1, 'z': 2}
 
 _rng = np.random.default_rng(1234)
@@ -77,6 +78,10 @@ def board_coords(P, N, lam):
     x, y, z = P[:, 0], P[:, 1], P[:, 2]
     n = N / (np.linalg.norm(N, axis=1, keepdims=True) + 1e-12)
     gdir = np.zeros_like(P)
+    if mode == 'board':     # woodlib board: one board, grain along its u
+        u = np.asarray(lam['u'], float); gdir[:] = u
+        g, r, th, a_, b_ = W.board_coords(P, lam)
+        return np.zeros(len(P)), g, a_, b_, np.full(len(P), 1e6), np.abs(n @ u), gdir
     if mode in ('stack', 'panel'):
         if ax == 2: raise ValueError(f'{mode}: grain axis must be x or y')
         c = z if mode == 'stack' else (y if ax == 0 else x)
@@ -138,9 +143,12 @@ def wood_value(P, N, lam):
 
 
 def wood_color(P, N, lam, species='walnut', contrast=None):
-    """sRGB 0..1, mean tone near the species' oiled colour (web_glb.py SPECIES)."""
+    """sRGB 0..1, mean tone near the species' oiled colour (woodlib). mode 'board' is woodlib's own board model
+    (flat / quarter / rift, sapwood, end grain); the glue-up modes keep their board split and take woodlib's colour."""
+    if lam.get('mode') == 'board':
+        return W.color(np.asarray(P, float), np.asarray(N, float), lam, lam.get('species', species))
     val, tv, hue, shade = wood_value(np.asarray(P, float), np.asarray(N, float), lam)
-    base = np.array(lam.get('rgb') or SPECIES.get(species, SPECIES['walnut']))   # rgb: keep a model's own tone
+    base = np.array(lam.get('rgb') or SPECIES[W.species(species)[0]])   # rgb: keep a model's own tone
     lin = np.where(base <= 0.04045, base / 12.92, ((base + 0.055) / 1.055) ** 2.4)
     dark, light = lin * 0.30, lin * 1.05      # latewood to earlywood; tung oil: darker, low contrast (renders)
     contrast = float(lam.get('contrast', 0.65)) if contrast is None else contrast

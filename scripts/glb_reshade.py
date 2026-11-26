@@ -62,7 +62,13 @@ def reshade(V, F, crease):
                 pa.append(st + x); pb.append(st + y)
     pa = np.concatenate(pa) if pa else np.zeros(0, int); pb = np.concatenate(pb) if pb else np.zeros(0, int)
     fa, fb = fidx[pa], fidx[pb]
+    # flat panels first (same rule as the check): two different panels never share a normal, however shallow the
+    # angle between them (a tapered leg, a faceted ogive), so each stays dead flat
+    ia = same.nonzero()[0]
+    dih = np.degrees(np.arccos(np.clip(np.einsum('ij,ij->i', fn[fidx[ia]], fn[fidx[ia + 1]]), -1, 1)))
+    pan, pcomp = panels(fn, np.where(good, ln / 2, 0), fidx[ia], fidx[ia + 1], dih, crease, ids=True)
     ok = (fa != fb) & (np.einsum('ij,ij->i', fn[fa], fn[fb]) >= np.cos(np.radians(crease))) & good[fa] & good[fb]
+    ok &= ~(pan[fa] & pan[fb] & (pcomp[fa] != pcomp[fb]))
     pa, pb = pa[ok], pb[ok]
     r = np.r_[lo_c[pa], hi_c[pa]]; c = np.r_[lo_c[pb], hi_c[pb]]
     C = nF * 3
@@ -71,9 +77,6 @@ def reshade(V, F, crease):
     cf = np.repeat(np.arange(nF), 3)
     # weighted normals: a fan that touches a flat panel takes the panel's normal, so the panel shades dead flat and
     # only its roundover / chamfer carries the turn (the long triangles across a lid can't smear an edge normal over it)
-    dih = np.degrees(np.arccos(np.clip(np.einsum('ij,ij->i', fn[fidx[same.nonzero()[0]]], fn[fidx[same.nonzero()[0] + 1]]), -1, 1)))
-    ia = same.nonzero()[0]
-    pan = panels(fn, np.where(good, ln / 2, 0), fidx[ia], fidx[ia + 1], dih, crease)
     w = W.ravel() * np.where(pan[cf], 1e6, 1.0)
     acc = np.zeros((lab.max() + 1, 3))
     np.add.at(acc, lab, fn[cf] * w[:, None])
@@ -208,8 +211,11 @@ def main():
                 Fn = inv.reshape(-1, 3)
                 mat = j['materials'][p['material']] if 'material' in p else {}
                 cd = 15.0 if glossy(mat) else 20.0
-                for _ in range(2 if (a.refine and not flat and WOODISH.search(mname)) else 0):
-                    if check_prim(Vn, newN, Fn, 40.0, cd)[0]['coarse'] <= a.refine:
+                for _ in range(3 if (a.refine and not flat) else 0):
+                    r = check_prim(Vn, newN, Fn, 40.0, cd)[0]
+                    # wood/finish curves too coarse, or (any material) big flat triangles sitting in a curve, which
+                    # shade as smeared panels: split them so the curve can carry the light
+                    if not ((WOODISH.search(mname) and r['coarse'] > a.refine) or r['smeared'] > 0.005 or r['facets'] > 0.005):
                         break
                     Vn, newN, other, Fn = refine(Vn, newN, other, Fn, a.crease)
                     refined[0] += 1

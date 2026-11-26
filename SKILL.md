@@ -68,6 +68,7 @@ Each of these is a shortcut that ends in a broken result. If you catch yourself 
 | "It looks fine on desktop" | Shoot it at both widths and run layout_check at every width before the PR. |
 | "The old render is close enough" | Run version_check and source_check; a stale file on the page fails. |
 | "The reel/sheet has the new names, the page can catch up later" | Update the project's `RECORD.json` and the page in the same session; `name_check.py` fails the old name on every page, card and link. the jewelry line stayed on the site a day after the reel called it Imago (25 Nov 2026). |
+| "A 4:5 cover grid makes the photos line up" | It crops the work. Galleries use justified rows with every photo whole (inline-layout.md, "Galleries"); `layout_check.mjs` fails `CROP` (/team, 25 Nov 2026). |
 | "Merged means it's live" | Run the live audit on the published page; it's done when that passes. |
 | "While I'm in here I'll also tidy/refactor this other bit" | Change only what the task needs. Smallest diff that works; no new options, helpers or files nobody asked for. Note other ideas for later instead. |
 

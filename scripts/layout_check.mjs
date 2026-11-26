@@ -93,6 +93,18 @@ for (const p of pages) {
           if (dt > 80 && dt > rowH * 0.2) out.push(`ALIGN ${name(kids[i].k)} and ${name(kids[j].k)} in ${name(g)} start ${Math.round(dt)}px apart`);
         }
       }
+      // CROP: a photo of a piece, shown through object-fit: cover, must not lose the piece (the owner, 25 Nov: /team
+      // forced every work photo into 4:5 and cut chairs off at the top). Allowed: project cards (.ar-win), small
+      // avatars (<= 120 px) and images marked data-crop-ok after a person has looked at the crop.
+      for (const im of document.querySelectorAll('main img, .ds img')) {
+        const cs = getComputedStyle(im); if (cs.objectFit !== 'cover') continue;
+        if (im.closest('.ar-win, [data-crop-ok]') || im.hasAttribute('data-crop-ok')) continue;
+        const b = im.getBoundingClientRect(); if (b.width <= 120 || b.height <= 120) continue;
+        const nw = im.naturalWidth || +im.getAttribute('width'), nh = im.naturalHeight || +im.getAttribute('height');
+        if (!nw || !nh) continue;
+        const ri = nw / nh, rb = b.width / b.height, shown = Math.min(ri / rb, rb / ri);
+        if (shown < 0.9) out.push(`CROP ${label(im)} shows ${Math.round(shown * 100)}% of the photo (object-fit: cover); show the whole piece (contain in a shared frame) or mark data-crop-ok after checking`);
+      }
       return [...new Set(out)];
     });
     for (const f of found) { console.log(`${p} @${w}${dpr > 1 ? 'x' + dpr : ''}: ${f}`); n++; }
